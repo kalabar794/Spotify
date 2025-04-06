@@ -40,9 +40,22 @@ function App() {
       secondary: {
         main: '#03dac6', // Teal
       },
+      background: {
+        default: 'transparent', // Make default background transparent
+        paper: darkMode ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)', // Semi-transparent paper
+      },
     },
     typography: {
       fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            backgroundColor: 'transparent', // Ensure body background is transparent
+          },
+        },
+      },
     },
   });
 

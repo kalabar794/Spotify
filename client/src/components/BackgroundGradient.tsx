@@ -93,6 +93,7 @@ const BackgroundGradient: React.FC<{ children: React.ReactNode }> = ({ children 
           width: '100%',
           height: '100%',
           zIndex: -1,
+          opacity: 0.85,
         }}
       />
       {children}
