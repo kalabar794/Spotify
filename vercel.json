@@ -17,8 +17,12 @@
       "dest": "/server/server.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/(.*\\.(js|json|css|ico|png|jpg|svg|ttf|woff|woff2)$)",
       "dest": "/client/build/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/build/index.html"
     }
   ],
   "env": {

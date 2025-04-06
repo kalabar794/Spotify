@@ -19,7 +19,7 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   
-  const { login, error } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,9 +50,9 @@ const Login: React.FC = () => {
           Login
         </Typography>
         
-        {(error || formError) && (
+        {(formError) && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {formError || error}
+            {formError}
           </Alert>
         )}
         

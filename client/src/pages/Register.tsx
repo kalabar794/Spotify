@@ -21,7 +21,7 @@ const Register: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   
-  const { register, error } = useContext(AuthContext);
+  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,9 +58,9 @@ const Register: React.FC = () => {
           Create Account
         </Typography>
         
-        {(error || formError) && (
+        {(formError) && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {formError || error}
+            {formError}
           </Alert>
         )}
         
