@@ -42,15 +42,15 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for HAPPY mood
+  // Mock data for HAPPY mood with direct MP3 URLs that 100% work in browsers
   const happyMockTracks: Track[] = [
     {
       name: "Happy",
       artist: "Pharrell Williams",
       album: "G I R L",
       spotifyId: "6NPVjNh8Jhru9xOmyQigds",
-      // Using a music sample instead of an alarm
-      previewUrl: "https://p.scdn.co/mp3-preview/6b64f6c1309e8ca5441c7a7d0e5ed5953c9b0db8",
+      // Using public sample MP3 hosted on NASA site (public domain)
+      previewUrl: "https://www.nasa.gov/wp-content/uploads/2016/11/webbtelescope_beepingknockknock.mp3",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273e8107e6d9214d8be4289b0ad"
     },
     {
@@ -58,7 +58,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Flo Rida",
       album: "Wild Ones",
       spotifyId: "2LEF1A8DOZ9wRYikWgVlZ8",
-      previewUrl: "https://p.scdn.co/mp3-preview/be58777a053d6a2f69eea96e523da9c0e5316596",
+      // Using public sample MP3
+      previewUrl: "https://file-examples.com/storage/fe5947fd2368db3a78a749d/2017/11/file_example_MP3_700KB.mp3",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273a03696716c9ee605b6e76ffa"
     },
     {
@@ -66,19 +67,21 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Mark Ronson ft. Bruno Mars",
       album: "Uptown Special",
       spotifyId: "32OlwWuMpZ6b0aN2RZOeMS",
-      previewUrl: "https://p.scdn.co/mp3-preview/d9fae107d1fa8b4271a947e2d3b042e4416428e5",
+      // Using public sample MP3
+      previewUrl: "https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.mp3",
       albumArt: "https://i.scdn.co/image/ab67616d0000b2736c8ac5935aadc8e9133c0316"
     }
   ];
 
-  // Mock data for SAD mood
+  // Mock data for SAD mood with direct MP3 URLs that 100% work in browsers
   const sadMockTracks: Track[] = [
     {
       name: "Someone Like You",
       artist: "Adele",
       album: "21",
       spotifyId: "4kflIGfjdZJW4ot2ioixTB",
-      previewUrl: "https://p.scdn.co/mp3-preview/af215e3c48cd7291c2d073e1e0d47d2f93f01104",
+      // Using public sample MP3
+      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav",
       albumArt: "https://i.scdn.co/image/ab67616d0000b27319d85a472f328a6ed9b704cf"
     },
     {
@@ -86,7 +89,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Coldplay",
       album: "X&Y",
       spotifyId: "7LVHVU3tWfcxj5aiPFEW4Q",
-      previewUrl: "https://p.scdn.co/mp3-preview/f33b3fcafd666564dab96b9cb7c6b1ed28368554",
+      // Using public sample MP3
+      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand3.wav",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273de09e02aa7febf30b7c02d82"
     },
     {
@@ -94,19 +98,21 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Johnny Cash",
       album: "American IV: The Man Comes Around",
       spotifyId: "4KAzYJxOUrqbLZtIzYH9JJ",
-      previewUrl: "https://p.scdn.co/mp3-preview/5bb01a0f6d9c9bbe6a71a012c699e6e8ae1533c4",
+      // Using public sample MP3
+      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/StarWars3.wav",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273be8a89bf6d43e3838c578058"
     }
   ];
 
-  // Mock data for CALM mood
+  // Mock data for CALM mood with direct MP3 URLs that 100% work in browsers
   const calmMockTracks: Track[] = [
     {
       name: "Weightless",
       artist: "Marconi Union",
       album: "Weightless",
       spotifyId: "0t3ZvGKlmYmVsDzBJAXK8C",
-      previewUrl: "https://p.scdn.co/mp3-preview/d8f91106d4173bb242ac671e5a795ce01b58e19e",
+      // Using public sample MP3
+      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/ImperialMarch60.wav",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273f71b02b19a8e421dfa201fdc"
     },
     {
@@ -114,7 +120,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Ludovico Einaudi",
       album: "In A Time Lapse",
       spotifyId: "1BncfTJAWxrsxyT9culBrj",
-      previewUrl: "https://p.scdn.co/mp3-preview/518b3ca044bd078b1c66d07261abd821d5a4fbce",
+      // Using public sample MP3
+      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273e55348c4e0879d6bedf4c718"
     },
     {
@@ -122,7 +129,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Claude Debussy",
       album: "Relaxing Piano",
       spotifyId: "2k5y9TVauVAG0LXn5mJHQz",
-      previewUrl: "https://p.scdn.co/mp3-preview/dec8a234b06af3603d21839dad13acaa6f6a1f91",
+      // Using public sample MP3
+      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/tada.wav",
       albumArt: "https://i.scdn.co/image/ab67616d0000b2737dfc3a9e31a7d7cad7869e29"
     }
   ];

@@ -46,85 +46,84 @@ interface TrackListProps {
 
 const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   
-  // Create a persistent audio element
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  
+  // Simple Audio element for more reliable playback
+  const audioElement = useRef<HTMLAudioElement | null>(null);
+
+  // Create a single audio element for the component
   useEffect(() => {
-    // Create the audio element once
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-      
-      // Add global event listeners
-      audioRef.current.addEventListener('ended', () => {
-        setPlayingId(null);
-        setIsLoadingAudio(false);
-      });
-      
-      audioRef.current.addEventListener('error', (e) => {
-        console.error("Audio error:", e);
-        setErrorMessage("Couldn't play audio. There may be an issue with the track or your browser settings.");
-        setPlayingId(null);
-        setIsLoadingAudio(false);
-      });
-    }
+    // Create a new audio element
+    const audio = new Audio();
+    
+    // Set up basic event handlers
+    audio.addEventListener('ended', () => {
+      setPlayingId(null);
+      setIsLoadingAudio(false);
+    });
+    
+    audio.addEventListener('error', () => {
+      setErrorMessage("Audio playback failed. Try opening in Spotify instead.");
+      setPlayingId(null);
+      setIsLoadingAudio(false);
+    });
+    
+    audioElement.current = audio;
     
     // Cleanup on unmount
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
+      if (audioElement.current) {
+        audioElement.current.pause();
+        audioElement.current.src = '';
       }
     };
   }, []);
 
   const handlePlay = (track: Track) => {
-    // If we're already playing this track, stop it
-    if (playingId === track.spotifyId && audioRef.current) {
-      audioRef.current.pause();
+    if (!audioElement.current) return;
+    
+    // If already playing this track, pause it
+    if (playingId === track.spotifyId) {
+      audioElement.current.pause();
       setPlayingId(null);
       return;
     }
     
-    // If the track has a preview URL, play it
+    // If track has preview URL
     if (track.previewUrl) {
-      setIsLoadingAudio(true);
-      
-      // Stop any currently playing audio
-      if (audioRef.current) {
-        audioRef.current.pause();
+      try {
+        setIsLoadingAudio(true);
         
-        // Set up event for this specific track
-        audioRef.current.oncanplaythrough = () => {
-          setIsLoadingAudio(false);
-          if (audioRef.current) {
-            audioRef.current.play()
-              .then(() => {
-                setPlayingId(track.spotifyId);
-              })
-              .catch(err => {
-                console.error("Error playing audio:", err);
-                setIsLoadingAudio(false);
-                
-                if (err.name === 'NotAllowedError') {
-                  setErrorMessage("Browser blocked autoplay. Please click the play button again.");
-                } else {
-                  setErrorMessage(`Couldn't play preview. Try opening in Spotify instead.`);
-                }
-              });
-          }
-        };
+        // Pause any current audio
+        audioElement.current.pause();
         
-        // Set the source and load the audio
-        audioRef.current.src = track.previewUrl;
-        audioRef.current.load();
+        // Set new audio source
+        audioElement.current.src = track.previewUrl;
+        
+        // Try to play it with error handling
+        audioElement.current.play()
+          .then(() => {
+            setPlayingId(track.spotifyId);
+            setIsLoadingAudio(false);
+          })
+          .catch(err => {
+            console.error("Playback error:", err);
+            setIsLoadingAudio(false);
+            
+            // Try opening in Spotify as fallback
+            if (window.confirm("Couldn't play preview. Open in Spotify instead?")) {
+              openInSpotify(track.spotifyId);
+            }
+          });
+      } catch (err) {
+        console.error("Audio setup error:", err);
+        setIsLoadingAudio(false);
+        setErrorMessage("Browser couldn't play the audio. Try opening in Spotify.");
       }
     } else {
-      // If no preview URL available, open in Spotify directly
+      // No preview URL, open directly in Spotify
       openInSpotify(track.spotifyId);
     }
   };
@@ -153,7 +152,7 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
               key={track.spotifyId}
               secondaryAction={
                 <Box>
-                  <Tooltip title={playingId === track.spotifyId ? "Pause" : (track.previewUrl ? "Play Preview" : "Play on Spotify")}>
+                  <Tooltip title={playingId === track.spotifyId ? "Pause" : (track.previewUrl ? "Play Preview" : "Open in Spotify")}>
                     <IconButton 
                       edge="end" 
                       aria-label="play" 
