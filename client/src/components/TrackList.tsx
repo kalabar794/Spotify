@@ -9,9 +9,10 @@ import {
   Paper,
   IconButton,
   Box,
-  Collapse
+  Collapse,
+  Tooltip
 } from '@mui/material';
-import { PlayArrow, Pause, ExpandMore, ExpandLess, PlaylistAdd } from '@mui/icons-material';
+import { PlayArrow, Pause, ExpandMore, ExpandLess, PlaylistAdd, OpenInNew } from '@mui/icons-material';
 
 interface ColorScheme {
   primary: string;
@@ -72,6 +73,15 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
     }
   };
 
+  const openInSpotify = (spotifyId: string) => {
+    const trackId = spotifyId.startsWith('spotify:track:') 
+      ? spotifyId.split(':')[2] 
+      : spotifyId;
+    
+    const spotifyLink = `https://open.spotify.com/track/${trackId}`;
+    window.open(spotifyLink, '_blank');
+  };
+
   const displayedTracks = expanded ? tracks : tracks.slice(0, 5);
 
   return (
@@ -81,15 +91,30 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
           <ListItem
             key={track.spotifyId}
             secondaryAction={
-              <IconButton 
-                edge="end" 
-                aria-label="play" 
-                onClick={() => handlePlay(track)}
-                disabled={!track.previewUrl}
-                color={playingId === track.spotifyId ? 'primary' : 'default'}
-              >
-                {playingId === track.spotifyId ? <Pause /> : <PlayArrow />}
-              </IconButton>
+              <Box>
+                <Tooltip title={playingId === track.spotifyId ? "Pause" : "Play Preview"}>
+                  <IconButton 
+                    edge="end" 
+                    aria-label="play" 
+                    onClick={() => handlePlay(track)}
+                    disabled={!track.previewUrl}
+                    color={playingId === track.spotifyId ? 'primary' : 'default'}
+                    sx={{ mr: 1 }}
+                  >
+                    {playingId === track.spotifyId ? <Pause /> : <PlayArrow />}
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Open in Spotify">
+                  <IconButton 
+                    edge="end" 
+                    aria-label="open in spotify" 
+                    onClick={() => openInSpotify(track.spotifyId)}
+                    sx={{ color: '#1DB954' }}
+                  >
+                    <OpenInNew />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             }
             sx={{ 
               borderBottom: '1px solid',

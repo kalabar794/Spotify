@@ -42,54 +42,55 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for demo purposes
-  const mockTracks: Track[] = [
-    {
-      name: "Happy",
-      artist: "Pharrell Williams",
-      album: "G I R L",
-      spotifyId: "spotify:track:60nZcImufyMA1MKQY3dcCO",
-      previewUrl: "https://p.scdn.co/mp3-preview/d72f46ad2ac9c9d93231b96a1a5b175d64ea5419",
-      albumArt: "https://i.scdn.co/image/ab67616d0000b273e8107e6d9214d8be4289b0ad"
-    },
-    {
-      name: "Good Feeling",
-      artist: "Flo Rida",
-      album: "Wild Ones",
-      spotifyId: "spotify:track:2LEF1A8DOZ9wRYikWgVlZ8",
-      previewUrl: "https://p.scdn.co/mp3-preview/4aaafdf0af3f349825c7c1b5feace804bd04bb1e",
-      albumArt: "https://i.scdn.co/image/ab67616d0000b273a03696716c9ee605b6e76ffa"
-    },
-    {
-      name: "Walking on Sunshine",
-      artist: "Katrina & The Waves",
-      album: "Katrina & The Waves",
-      spotifyId: "spotify:track:05wIrZSwuaVWhcv5FfqeH0",
-      previewUrl: "https://p.scdn.co/mp3-preview/b3d8fc348639c888dc95d7b3fa9accd0f83fe158",
-      albumArt: "https://i.scdn.co/image/ab67616d0000b2731d5c3bbc1cdb7a10af419f6c"
-    }
-  ];
-
   const analyzeMood = async (text: string): Promise<MoodData | null> => {
     setIsLoading(true);
     
     try {
-      // Mock API call for mood analysis
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       // Simple sentiment analysis based on keywords
       const keywords = text.toLowerCase().split(/\W+/).filter(word => word.length > 3);
       const uniqueKeywords = Array.from(new Set(keywords)).slice(0, 5);
       
-      // In a real app, this would be a call to a sentiment analysis API
-      const sentiment = text.toLowerCase().includes('happy') || text.toLowerCase().includes('good') ? 1 : 0.5;
+      // Perform a basic sentiment analysis
+      // Positive keywords
+      const positiveWords = ['happy', 'joy', 'excited', 'good', 'great', 'amazing', 'love', 'wonderful'];
+      // Negative keywords
+      const negativeWords = ['sad', 'unhappy', 'depressed', 'bad', 'terrible', 'awful', 'hate', 'angry'];
       
-      // Generate tracks based on mood
-      setTracks(mockTracks);
+      let sentimentScore = 0.5; // Neutral default
+      
+      // Count positive and negative words
+      const positiveCount = keywords.filter(word => positiveWords.includes(word)).length;
+      const negativeCount = keywords.filter(word => negativeWords.includes(word)).length;
+      
+      // Calculate sentiment
+      if (positiveCount > negativeCount) {
+        sentimentScore = 0.5 + (positiveCount / keywords.length) * 0.5;
+      } else if (negativeCount > positiveCount) {
+        sentimentScore = 0.5 - (negativeCount / keywords.length) * 0.5;
+      }
+      
+      // API call to get Spotify recommendations
+      const response = await fetch('/api/mood/recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          moodKeywords: uniqueKeywords,
+          sentiment: sentimentScore,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get music recommendations');
+      }
+      
+      const data = await response.json();
+      setTracks(data);
       
       return {
         keywords: uniqueKeywords,
-        sentiment,
+        sentiment: sentimentScore,
         originalText: text
       };
     } catch (error) {
