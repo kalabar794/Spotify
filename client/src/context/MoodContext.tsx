@@ -42,30 +42,33 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for fallback with guaranteed preview URLs and valid Spotify IDs
+  // Mock data with public domain audio sources that work cross-origin
   const mockTracks: Track[] = [
     {
       name: "Happy",
       artist: "Pharrell Williams",
       album: "G I R L",
-      spotifyId: "6NPVjNh8Jhru9xOmyQigds", // Valid Spotify ID
-      previewUrl: "https://p.scdn.co/mp3-preview/6b64f6c1309e8ca5441c7a7d0e5ed5953c9b0db8?cid=162b7dc01f3a4a2ca32ed3cec83d1e02",
+      spotifyId: "6NPVjNh8Jhru9xOmyQigds",
+      // Using a reliable public domain source instead
+      previewUrl: "https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273e8107e6d9214d8be4289b0ad"
     },
     {
       name: "Good Feeling",
       artist: "Flo Rida",
       album: "Wild Ones",
-      spotifyId: "2LEF1A8DOZ9wRYikWgVlZ8", // Valid Spotify ID
-      previewUrl: "https://p.scdn.co/mp3-preview/be58777a053d6a2f69eea96e523da9c0e5316596?cid=162b7dc01f3a4a2ca32ed3cec83d1e02",
+      spotifyId: "2LEF1A8DOZ9wRYikWgVlZ8",
+      // Using a reliable public domain source instead
+      previewUrl: "https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273a03696716c9ee605b6e76ffa"
     },
     {
       name: "Uptown Funk",
       artist: "Mark Ronson ft. Bruno Mars",
       album: "Uptown Special",
-      spotifyId: "32OlwWuMpZ6b0aN2RZOeMS", // Valid Spotify ID
-      previewUrl: "https://p.scdn.co/mp3-preview/d9fae107d1fa8b4271a947e2d3b042e4416428e5?cid=162b7dc01f3a4a2ca32ed3cec83d1e02",
+      spotifyId: "32OlwWuMpZ6b0aN2RZOeMS",
+      // Using a reliable public domain source instead
+      previewUrl: "https://actions.google.com/sounds/v1/cartoon/cartoon_cowbell.ogg",
       albumArt: "https://i.scdn.co/image/ab67616d0000b2736c8ac5935aadc8e9133c0316"
     }
   ];
