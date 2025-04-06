@@ -12,6 +12,7 @@ import NotFound from './pages/NotFound';
 
 // Import UI components
 import Navbar from './components/Navbar';
+import BackgroundGradient from './components/BackgroundGradient';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -48,16 +49,18 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div className="App">
-        <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+      <BackgroundGradient>
+        <div className="App">
+          <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      </BackgroundGradient>
     </ThemeProvider>
   );
 }
