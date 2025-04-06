@@ -63,13 +63,18 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
     // If the track has a preview URL, play it
     if (track.previewUrl) {
       const newAudio = new Audio(track.previewUrl);
-      newAudio.play();
+      newAudio.play().catch(err => {
+        console.error("Error playing audio:", err);
+      });
       newAudio.addEventListener('ended', () => {
         setPlayingId(null);
       });
       
       setAudio(newAudio);
       setPlayingId(track.spotifyId);
+    } else {
+      // If no preview URL available, open in Spotify directly
+      openInSpotify(track.spotifyId);
     }
   };
 
@@ -92,14 +97,13 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
             key={track.spotifyId}
             secondaryAction={
               <Box>
-                <Tooltip title={playingId === track.spotifyId ? "Pause" : "Play Preview"}>
+                <Tooltip title={playingId === track.spotifyId ? "Pause" : (track.previewUrl ? "Play Preview" : "Play on Spotify")}>
                   <IconButton 
                     edge="end" 
                     aria-label="play" 
                     onClick={() => handlePlay(track)}
-                    disabled={!track.previewUrl}
                     color={playingId === track.spotifyId ? 'primary' : 'default'}
-                    sx={{ mr: 1 }}
+                    sx={{ mr: 1, color: '#1DB954' }}
                   >
                     {playingId === track.spotifyId ? <Pause /> : <PlayArrow />}
                   </IconButton>

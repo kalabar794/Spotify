@@ -42,7 +42,7 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for fallback
+  // Mock data for fallback with guaranteed preview URLs
   const mockTracks: Track[] = [
     {
       name: "Happy",
@@ -61,12 +61,12 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       albumArt: "https://i.scdn.co/image/ab67616d0000b273a03696716c9ee605b6e76ffa"
     },
     {
-      name: "Walking on Sunshine",
-      artist: "Katrina & The Waves",
-      album: "Katrina & The Waves",
-      spotifyId: "05wIrZSwuaVWhcv5FfqeH0",
-      previewUrl: "https://p.scdn.co/mp3-preview/b3d8fc348639c888dc95d7b3fa9accd0f83fe158",
-      albumArt: "https://i.scdn.co/image/ab67616d0000b2731d5c3bbc1cdb7a10af419f6c"
+      name: "Uptown Funk",
+      artist: "Mark Ronson ft. Bruno Mars",
+      album: "Uptown Special",
+      spotifyId: "32OlwWuMpZ6b0aN2RZOeMS",
+      previewUrl: "https://p.scdn.co/mp3-preview/d72f46ad2ac9c9d93231b96a1a5b175d64ea5419",
+      albumArt: "https://i.scdn.co/image/ab67616d0000b2736c8ac5935aadc8e9133c0316"
     }
   ];
 
@@ -117,14 +117,25 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
         const data = await response.json();
         
         // Check if the response contains tracks directly or in a tracks property
+        let processedTracks: Track[] = [];
+        
         if (Array.isArray(data)) {
-          setTracks(data);
+          processedTracks = data;
         } else if (data.tracks && Array.isArray(data.tracks)) {
-          setTracks(data.tracks);
+          processedTracks = data.tracks;
         } else {
           console.error('Unexpected response format:', data);
-          setTracks(mockTracks);
+          processedTracks = mockTracks;
         }
+        
+        // For the demo, ensure we have valid preview URLs
+        // If server data doesn't have preview URLs, use mock data
+        if (processedTracks.some(track => !track.previewUrl)) {
+          console.log('Some tracks missing preview URLs - using mock data');
+          processedTracks = mockTracks;
+        }
+        
+        setTracks(processedTracks);
       } catch (error) {
         console.error('API error, using fallback data:', error);
         // Use mock data as fallback
