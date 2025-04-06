@@ -408,41 +408,10 @@ const Home: React.FC = () => {
                     ) : (
                       <Box sx={{ 
                         mt: 3, 
-                        p: 3, 
-                        borderRadius: theme.shape.borderRadius,
-                        background: `linear-gradient(135deg, ${theme.palette.primary.light}10, ${theme.palette.secondary.light}10)`,
-                        border: `1px solid ${theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.05)' 
-                          : 'rgba(0, 0, 0, 0.05)'}`,
+                        p: 0,  // Removing padding to make this component invisible
+                        display: 'none', // Hide this component completely
                       }}>
-                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                          Want to save this playlist?
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 2 }}>
-                          Create an account or log in to save and access your personalized playlists anytime.
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                          <Button 
-                            variant="contained" 
-                            color="secondary"
-                            onClick={() => navigate('/register')}
-                            sx={{ borderRadius: 50 }}
-                          >
-                            Sign Up
-                          </Button>
-                          <Button 
-                            variant="outlined" 
-                            color="secondary"
-                            onClick={() => navigate('/login')}
-                            sx={{ 
-                              borderRadius: 50,
-                              borderWidth: 2,
-                              '&:hover': { borderWidth: 2 }
-                            }}
-                          >
-                            Login
-                          </Button>
-                        </Box>
+                        {/* Section removed as requested */}
                       </Box>
                     )}
                   </>
