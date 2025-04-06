@@ -31,9 +31,9 @@ interface Track {
   spotifyId: string;
   name: string;
   artist: string;
-  album: string;
-  albumArt: string;
-  previewUrl: string;
+  album?: string;
+  albumArt?: string;
+  previewUrl?: string;
 }
 
 interface TrackListProps {
@@ -148,7 +148,7 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
                   </Typography>
                   <br />
                   <Typography variant="caption" component="span" color="text.secondary">
-                    {track.album}
+                    {track.album || ''}
                   </Typography>
                 </>
               }

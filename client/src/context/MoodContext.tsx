@@ -42,6 +42,34 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Mock data for fallback
+  const mockTracks: Track[] = [
+    {
+      name: "Happy",
+      artist: "Pharrell Williams",
+      album: "G I R L",
+      spotifyId: "60nZcImufyMA1MKQY3dcCO",
+      previewUrl: "https://p.scdn.co/mp3-preview/d72f46ad2ac9c9d93231b96a1a5b175d64ea5419",
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273e8107e6d9214d8be4289b0ad"
+    },
+    {
+      name: "Good Feeling",
+      artist: "Flo Rida",
+      album: "Wild Ones",
+      spotifyId: "2LEF1A8DOZ9wRYikWgVlZ8",
+      previewUrl: "https://p.scdn.co/mp3-preview/4aaafdf0af3f349825c7c1b5feace804bd04bb1e",
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273a03696716c9ee605b6e76ffa"
+    },
+    {
+      name: "Walking on Sunshine",
+      artist: "Katrina & The Waves",
+      album: "Katrina & The Waves",
+      spotifyId: "05wIrZSwuaVWhcv5FfqeH0",
+      previewUrl: "https://p.scdn.co/mp3-preview/b3d8fc348639c888dc95d7b3fa9accd0f83fe158",
+      albumArt: "https://i.scdn.co/image/ab67616d0000b2731d5c3bbc1cdb7a10af419f6c"
+    }
+  ];
+
   const analyzeMood = async (text: string): Promise<MoodData | null> => {
     setIsLoading(true);
     
@@ -70,23 +98,38 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       }
       
       // API call to get Spotify recommendations
-      const response = await fetch('/api/mood/recommendations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          moodKeywords: uniqueKeywords,
-          sentiment: sentimentScore,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get music recommendations');
+      try {
+        const response = await fetch('/api/mood/recommendations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            moodKeywords: uniqueKeywords,
+            sentiment: sentimentScore,
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to get music recommendations');
+        }
+        
+        const data = await response.json();
+        
+        // Check if the response contains tracks directly or in a tracks property
+        if (Array.isArray(data)) {
+          setTracks(data);
+        } else if (data.tracks && Array.isArray(data.tracks)) {
+          setTracks(data.tracks);
+        } else {
+          console.error('Unexpected response format:', data);
+          setTracks(mockTracks);
+        }
+      } catch (error) {
+        console.error('API error, using fallback data:', error);
+        // Use mock data as fallback
+        setTracks(mockTracks);
       }
-      
-      const data = await response.json();
-      setTracks(data);
       
       return {
         keywords: uniqueKeywords,
@@ -95,6 +138,7 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       };
     } catch (error) {
       console.error('Error analyzing mood:', error);
+      setTracks(mockTracks);
       return null;
     } finally {
       setIsLoading(false);

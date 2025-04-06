@@ -20,6 +20,7 @@ import {
 import { MusicNote, Mood, PlayArrow, OpenInNew, Search } from '@mui/icons-material';
 import { useMood } from '../context/MoodContext';
 import { AuthContext } from '../context/AuthContext';
+import TrackList from '../components/TrackList';
 
 const GradientPaper = styled(Paper)(({ theme }) => ({
   background: `linear-gradient(135deg, ${theme.palette.primary.light}15 0%, ${theme.palette.secondary.light}15 100%)`,
@@ -338,74 +339,20 @@ const Home: React.FC = () => {
                         <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
                           Based on your mood: <strong>{moodText}</strong>
                         </Typography>
-                        <List>
-                          {tracks.map((track, index) => {
-                            const spotifyTrackId = track.spotifyId.startsWith('spotify:track:') 
-                              ? track.spotifyId.split(':')[2] 
-                              : track.spotifyId;
-                            
-                            const spotifyLink = `https://open.spotify.com/track/${spotifyTrackId}`;
-                            
-                            return (
-                              <ListItem 
-                                key={track.spotifyId} 
-                                sx={{
-                                  borderBottom: index < tracks.length - 1 ? '1px solid #eee' : 'none',
-                                  py: 1.5
-                                }}
-                              >
-                                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                                  <Avatar 
-                                    sx={{ 
-                                      bgcolor: '#1DB954', 
-                                      width: 36, 
-                                      height: 36, 
-                                      mr: 2,
-                                      fontSize: '0.9rem',
-                                      fontWeight: 'bold' 
-                                    }}
-                                  >
-                                    {index + 1}
-                                  </Avatar>
-                                  
-                                  <Box sx={{ flexGrow: 1 }}>
-                                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                                      {track.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {track.artist}
-                                    </Typography>
-                                  </Box>
-                                  
-                                  <Box>
-                                    {track.previewUrl && (
-                                      <Tooltip title="Play Preview">
-                                        <IconButton 
-                                          color="primary" 
-                                          href={track.previewUrl} 
-                                          target="_blank"
-                                          sx={{ color: '#1DB954' }}
-                                        >
-                                          <PlayArrow />
-                                        </IconButton>
-                                      </Tooltip>
-                                    )}
-                                    
-                                    <Tooltip title="Open in Spotify">
-                                      <IconButton 
-                                        href={spotifyLink} 
-                                        target="_blank"
-                                        sx={{ color: '#1DB954' }}
-                                      >
-                                        <OpenInNew />
-                                      </IconButton>
-                                    </Tooltip>
-                                  </Box>
-                                </Box>
-                              </ListItem>
-                            );
-                          })}
-                        </List>
+                        
+                        <TrackList 
+                          tracks={tracks} 
+                          mood={analyzedMood ? {
+                            keywords: analyzedMood.keywords,
+                            sentiment: analyzedMood.sentiment,
+                            originalText: analyzedMood.originalText,
+                            colorScheme: {
+                              primary: theme.palette.primary.main,
+                              secondary: theme.palette.secondary.main,
+                              text: theme.palette.text.primary
+                            }
+                          } : null} 
+                        />
                         
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                           <Button 
