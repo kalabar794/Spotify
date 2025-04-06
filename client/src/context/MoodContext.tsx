@@ -42,30 +42,30 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for fallback with guaranteed preview URLs
+  // Mock data for fallback with guaranteed preview URLs and valid Spotify IDs
   const mockTracks: Track[] = [
     {
       name: "Happy",
       artist: "Pharrell Williams",
       album: "G I R L",
-      spotifyId: "60nZcImufyMA1MKQY3dcCO",
-      previewUrl: "https://p.scdn.co/mp3-preview/d72f46ad2ac9c9d93231b96a1a5b175d64ea5419",
+      spotifyId: "6NPVjNh8Jhru9xOmyQigds", // Valid Spotify ID
+      previewUrl: "https://p.scdn.co/mp3-preview/6b64f6c1309e8ca5441c7a7d0e5ed5953c9b0db8?cid=162b7dc01f3a4a2ca32ed3cec83d1e02",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273e8107e6d9214d8be4289b0ad"
     },
     {
       name: "Good Feeling",
       artist: "Flo Rida",
       album: "Wild Ones",
-      spotifyId: "2LEF1A8DOZ9wRYikWgVlZ8",
-      previewUrl: "https://p.scdn.co/mp3-preview/4aaafdf0af3f349825c7c1b5feace804bd04bb1e",
+      spotifyId: "2LEF1A8DOZ9wRYikWgVlZ8", // Valid Spotify ID
+      previewUrl: "https://p.scdn.co/mp3-preview/be58777a053d6a2f69eea96e523da9c0e5316596?cid=162b7dc01f3a4a2ca32ed3cec83d1e02",
       albumArt: "https://i.scdn.co/image/ab67616d0000b273a03696716c9ee605b6e76ffa"
     },
     {
       name: "Uptown Funk",
       artist: "Mark Ronson ft. Bruno Mars",
       album: "Uptown Special",
-      spotifyId: "32OlwWuMpZ6b0aN2RZOeMS",
-      previewUrl: "https://p.scdn.co/mp3-preview/d72f46ad2ac9c9d93231b96a1a5b175d64ea5419",
+      spotifyId: "32OlwWuMpZ6b0aN2RZOeMS", // Valid Spotify ID
+      previewUrl: "https://p.scdn.co/mp3-preview/d9fae107d1fa8b4271a947e2d3b042e4416428e5?cid=162b7dc01f3a4a2ca32ed3cec83d1e02",
       albumArt: "https://i.scdn.co/image/ab67616d0000b2736c8ac5935aadc8e9133c0316"
     }
   ];
