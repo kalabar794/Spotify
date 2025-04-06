@@ -11,16 +11,13 @@ import {
   useTheme,
   Fade,
   styled,
-  Link,
   IconButton,
   Tooltip,
-  Divider,
   List,
   ListItem,
-  ListItemText,
   Avatar
 } from '@mui/material';
-import { MusicNote, Mood, PlayArrow, Headphones, Album, OpenInNew, Search } from '@mui/icons-material';
+import { MusicNote, Mood, PlayArrow, OpenInNew, Search } from '@mui/icons-material';
 import { useMood } from '../context/MoodContext';
 import { AuthContext } from '../context/AuthContext';
 
@@ -73,8 +70,8 @@ const Home: React.FC = () => {
   const [textInput, setTextInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { moodText, setMoodText, tracks, isLoading, error, analyzeMood, clearTracks } = useMood();
+  const [error, setError] = useState<string | null>(null);
+  const { moodText, setMoodText, tracks, isLoading, analyzeMood, clearTracks } = useMood();
   const [analyzedMood, setAnalyzedMood] = useState<{keywords: string[], sentiment: number, originalText: string} | null>(null);
   
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -87,12 +84,12 @@ const Home: React.FC = () => {
     console.log("Submit button clicked!");
     
     if (!textInput.trim()) {
-      setErrorMessage('Please enter your mood');
+      setError('Please enter your mood');
       return;
     }
 
     try {
-      setErrorMessage(null);
+      setError(null);
       setIsSubmitting(true);
       
       console.log('Submitting mood text:', textInput);
@@ -125,7 +122,7 @@ const Home: React.FC = () => {
       }
     } catch (err) {
       console.error('Error in handleSubmit:', err);
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to analyze your mood');
+      setError(err instanceof Error ? err.message : 'Failed to analyze your mood');
       
       // Still show results even on error
       setShowResults(true);
