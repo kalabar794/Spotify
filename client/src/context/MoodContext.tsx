@@ -37,20 +37,25 @@ interface MoodProviderProps {
   children: ReactNode;
 }
 
+// Base64-encoded short audio clips
+const happyAudio = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKK3XdujQfBuGIYhicIQeD4cHnMYIN4PggwcH8Hw4ggwfBA/BAEHAIHg+CDHiCIYfQQYPggaDgiCB/4PgQCD4Ig+CIOAQPh8QfAkHwQY8fB5w4IPggCEAwIAOgAwAAwBuBgYLgjgAIAAAAACsAAADgAA/8YAAAONiZCXjYAAAAMAAAMAADA4CAgGAAAEAAAOAB+JZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==";
+const sadAudio = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKKrrdukYPgbxsHwbB8MAQdjBBvB8EGDzoMHwfggwcH4Pgg4BAIHg+CDHiCIYfQQYPggaDgiCB4IOAQCDgEDwJB8EGPHwecOCD4IAhAMCADoAMAAMAYAgYLgjgAIAAAAACsAAADgAA/8YAAAONiZCXjYAAAAMAAAMAADD4CAgGAAAEAAAOAB+JZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==";
+const calmAudio = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKKwLumkYPg+D4Ng+DIbDYwQbwfBBg86DB8HwQcHB8HwQY8QRB8PggwcBkEDwQPBEEDwfAgEHwRB8EQfBBjx8HnDgg+CAIQDAgA6ADAADAGAIHg+CDgAIAAAAAKwAAAOAAAPxgAAA42JkJeNgAAAAwAAAwAAMPgICAYAAAQAAA4AH4lkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==";
+
 export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
   const [moodText, setMoodText] = useState('');
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for HAPPY mood with direct MP3 URLs that 100% work in browsers
+  // Mock data for HAPPY mood with embedded audio data
   const happyMockTracks: Track[] = [
     {
       name: "Happy",
       artist: "Pharrell Williams",
       album: "G I R L",
       spotifyId: "6NPVjNh8Jhru9xOmyQigds",
-      // Using public sample MP3 hosted on NASA site (public domain)
-      previewUrl: "https://www.nasa.gov/wp-content/uploads/2016/11/webbtelescope_beepingknockknock.mp3",
+      // Using embedded base64 audio data
+      previewUrl: happyAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b273e8107e6d9214d8be4289b0ad"
     },
     {
@@ -58,8 +63,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Flo Rida",
       album: "Wild Ones",
       spotifyId: "2LEF1A8DOZ9wRYikWgVlZ8",
-      // Using public sample MP3
-      previewUrl: "https://file-examples.com/storage/fe5947fd2368db3a78a749d/2017/11/file_example_MP3_700KB.mp3",
+      // Using embedded base64 audio data
+      previewUrl: happyAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b273a03696716c9ee605b6e76ffa"
     },
     {
@@ -67,21 +72,21 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Mark Ronson ft. Bruno Mars",
       album: "Uptown Special",
       spotifyId: "32OlwWuMpZ6b0aN2RZOeMS",
-      // Using public sample MP3
-      previewUrl: "https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.mp3",
+      // Using embedded base64 audio data
+      previewUrl: happyAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b2736c8ac5935aadc8e9133c0316"
     }
   ];
 
-  // Mock data for SAD mood with direct MP3 URLs that 100% work in browsers
+  // Mock data for SAD mood with embedded audio data
   const sadMockTracks: Track[] = [
     {
       name: "Someone Like You",
       artist: "Adele",
       album: "21",
       spotifyId: "4kflIGfjdZJW4ot2ioixTB",
-      // Using public sample MP3
-      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav",
+      // Using embedded base64 audio data
+      previewUrl: sadAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b27319d85a472f328a6ed9b704cf"
     },
     {
@@ -89,8 +94,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Coldplay",
       album: "X&Y",
       spotifyId: "7LVHVU3tWfcxj5aiPFEW4Q",
-      // Using public sample MP3
-      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand3.wav",
+      // Using embedded base64 audio data
+      previewUrl: sadAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b273de09e02aa7febf30b7c02d82"
     },
     {
@@ -98,21 +103,21 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Johnny Cash",
       album: "American IV: The Man Comes Around",
       spotifyId: "4KAzYJxOUrqbLZtIzYH9JJ",
-      // Using public sample MP3
-      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/StarWars3.wav",
+      // Using embedded base64 audio data
+      previewUrl: sadAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b273be8a89bf6d43e3838c578058"
     }
   ];
 
-  // Mock data for CALM mood with direct MP3 URLs that 100% work in browsers
+  // Mock data for CALM mood with embedded audio data
   const calmMockTracks: Track[] = [
     {
       name: "Weightless",
       artist: "Marconi Union",
       album: "Weightless",
       spotifyId: "0t3ZvGKlmYmVsDzBJAXK8C",
-      // Using public sample MP3
-      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/ImperialMarch60.wav",
+      // Using embedded base64 audio data
+      previewUrl: calmAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b273f71b02b19a8e421dfa201fdc"
     },
     {
@@ -120,8 +125,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Ludovico Einaudi",
       album: "In A Time Lapse",
       spotifyId: "1BncfTJAWxrsxyT9culBrj",
-      // Using public sample MP3
-      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav",
+      // Using embedded base64 audio data
+      previewUrl: calmAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b273e55348c4e0879d6bedf4c718"
     },
     {
@@ -129,8 +134,8 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       artist: "Claude Debussy",
       album: "Relaxing Piano",
       spotifyId: "2k5y9TVauVAG0LXn5mJHQz",
-      // Using public sample MP3
-      previewUrl: "https://www2.cs.uic.edu/~i101/SoundFiles/tada.wav",
+      // Using embedded base64 audio data
+      previewUrl: calmAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b2737dfc3a9e31a7d7cad7869e29"
     }
   ];
