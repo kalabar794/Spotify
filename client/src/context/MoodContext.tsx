@@ -75,6 +75,46 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       // Using embedded base64 audio data
       previewUrl: happyAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b2736c8ac5935aadc8e9133c0316"
+    },
+    {
+      name: "Can't Stop the Feeling!",
+      artist: "Justin Timberlake",
+      album: "Trolls (Original Motion Picture Soundtrack)",
+      spotifyId: "1JCCdiru7fhstOIF4N7WJC",
+      previewUrl: happyAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273908280d9807127e185b71d37"
+    },
+    {
+      name: "Shake It Off",
+      artist: "Taylor Swift",
+      album: "1989",
+      spotifyId: "0cqRj7pUJDkTCEsJkx8snD",
+      previewUrl: happyAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b2739abdf14e6058bd3903686148"
+    },
+    {
+      name: "I Gotta Feeling",
+      artist: "Black Eyed Peas",
+      album: "THE E.N.D. (THE ENERGY NEVER DIES)",
+      spotifyId: "4W4fNrZYkobj539TOWsLO2",
+      previewUrl: happyAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b27376b7b1664174a14d6287f4c9"
+    },
+    {
+      name: "The Middle",
+      artist: "Zedd, Maren Morris, Grey",
+      album: "The Middle",
+      spotifyId: "0ct6r3EGTcMLPtrXHDvVjc",
+      previewUrl: happyAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273c03c5c4acb47ba3afcbaf8f9"
+    },
+    {
+      name: "Dynamite",
+      artist: "BTS",
+      album: "Dynamite (DayTime Version)",
+      spotifyId: "6ebkx7Q3tIrTXCK2lMRmF9",
+      previewUrl: happyAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273344c3661f8a283e4bcf8a696"
     }
   ];
 
@@ -106,6 +146,46 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       // Using embedded base64 audio data
       previewUrl: sadAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b273be8a89bf6d43e3838c578058"
+    },
+    {
+      name: "Hello",
+      artist: "Adele",
+      album: "25",
+      spotifyId: "0ENSn4fwAbCGeFGVUbXEU3",
+      previewUrl: sadAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273856b7a4f1c234a7ebe4f8775"
+    },
+    {
+      name: "Say Something",
+      artist: "A Great Big World, Christina Aguilera",
+      album: "Is There Anybody Out There?",
+      spotifyId: "2GLMjDdZ7jH7G5r5Fz5Yfo",
+      previewUrl: sadAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b2739abcb1f7c9f4269c5f86fe61"
+    },
+    {
+      name: "Tears in Heaven",
+      artist: "Eric Clapton",
+      album: "Unplugged",
+      spotifyId: "3vkQ5DAB1qQMYO4Mr9zJN6",
+      previewUrl: sadAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273e38a30277fcd883ec4fc61fc"
+    },
+    {
+      name: "Skinny Love",
+      artist: "Birdy",
+      album: "Birdy (Deluxe Version)",
+      spotifyId: "6PJfFBxYAGBxo3OaTO0UQj",
+      previewUrl: sadAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273e9c63b6e208db22c2a7aeff7"
+    },
+    {
+      name: "Photograph",
+      artist: "Ed Sheeran",
+      album: "x (Deluxe Edition)",
+      spotifyId: "1HNkqx9Ahdgi1Ixy2xkKkL",
+      previewUrl: sadAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b27326e080d91228d117413b1f9d"
     }
   ];
 
@@ -137,6 +217,46 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
       // Using embedded base64 audio data
       previewUrl: calmAudio,
       albumArt: "https://i.scdn.co/image/ab67616d0000b2737dfc3a9e31a7d7cad7869e29"
+    },
+    {
+      name: "River Flows In You",
+      artist: "Yiruma",
+      album: "Piano Recital: Yiruma",
+      spotifyId: "2bjwRfXMk4uRgOD9IBYl9h",
+      previewUrl: calmAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273b7ca2c198f05561c651614d5"
+    },
+    {
+      name: "Ocean Eyes",
+      artist: "Billie Eilish",
+      album: "Ocean Eyes",
+      spotifyId: "1JLrQmodMSE0Oz2EgRTI6s",
+      previewUrl: calmAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b273e9c6c2d416bce01ddc16c4b6"
+    },
+    {
+      name: "Gymnopédie No. 1",
+      artist: "Erik Satie",
+      album: "Gymnopédies",
+      spotifyId: "4qnBDLSEXI6xJVRg9PaAWs",
+      previewUrl: calmAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b2734cb46f3ab88a80e403ee68a7"
+    },
+    {
+      name: "Moonlight Sonata",
+      artist: "Ludwig van Beethoven",
+      album: "Classical Piano",
+      spotifyId: "1BZG99C7Co1r6QUC3zaS59",
+      previewUrl: calmAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b2734ad7b4bf6ff6ba86f83a3c77"
+    },
+    {
+      name: "Ambient 1/Music For Airports: 2/1",
+      artist: "Brian Eno",
+      album: "Ambient 1: Music for Airports",
+      spotifyId: "2etHQJxIbV0IiPWUMzY504",
+      previewUrl: calmAudio,
+      albumArt: "https://i.scdn.co/image/ab67616d0000b27331f8cf3659aec140e1f54290"
     }
   ];
 

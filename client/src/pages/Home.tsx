@@ -1,5 +1,5 @@
-import React, { useState, useRef, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useContext, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Container, 
   Typography, 
@@ -76,9 +76,184 @@ const Home: React.FC = () => {
   const [analyzedMood, setAnalyzedMood] = useState<{keywords: string[], sentiment: number, originalText: string} | null>(null);
   
   const resultsRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const { isAuthenticated } = useContext(AuthContext);
+
+  // Animation for background
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    // Music note particle system
+    const particles: {
+      x: number;
+      y: number;
+      size: number;
+      speedX: number;
+      speedY: number;
+      opacity: number;
+      rotation: number;
+      rotationSpeed: number;
+    }[] = [];
+
+    // Create initial particles
+    for (let i = 0; i < 30; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 20 + 10,
+        speedX: (Math.random() - 0.5) * 2,
+        speedY: (Math.random() - 0.5) * 2 - 1, // Bias upward
+        opacity: Math.random() * 0.7 + 0.1,
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.02
+      });
+    }
+
+    // Handle window resize
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Draw music note
+    const drawMusicNote = (x: number, y: number, size: number, rotation: number, opacity: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.globalAlpha = opacity;
+      
+      // Draw note head
+      ctx.beginPath();
+      ctx.ellipse(0, 0, size * 0.6, size * 0.4, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#a06cd5';
+      ctx.fill();
+      
+      // Draw stem
+      ctx.beginPath();
+      ctx.moveTo(size * 0.5, 0);
+      ctx.lineTo(size * 0.5, -size * 1.5);
+      ctx.lineWidth = size * 0.15;
+      ctx.strokeStyle = '#a06cd5';
+      ctx.stroke();
+      
+      ctx.restore();
+    };
+
+    // Animation loop
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height);
+      
+      // Update and draw particles
+      particles.forEach(particle => {
+        // Move particles
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
+        particle.rotation += particle.rotationSpeed;
+        
+        // Reset if off-screen
+        if (particle.y < -100 || particle.y > height + 100 || 
+            particle.x < -100 || particle.x > width + 100) {
+          particle.x = Math.random() * width;
+          particle.y = height + 50;
+          particle.speedY = -Math.random() * 2 - 1;
+        }
+        
+        // Draw the particle
+        drawMusicNote(
+          particle.x, 
+          particle.y, 
+          particle.size, 
+          particle.rotation, 
+          particle.opacity
+        );
+      });
+      
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Check for mood parameter in the URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const moodParam = searchParams.get('mood');
+    
+    if (moodParam) {
+      setTextInput(moodParam);
+      // Optionally auto-submit the form
+      const submitForm = async () => {
+        try {
+          setError(null);
+          setIsSubmitting(true);
+          
+          // Attempt to analyze mood
+          const moodData = await analyzeMood(moodParam);
+          
+          // Show results
+          setShowResults(true);
+          
+          // Set mood data
+          if (moodData) {
+            setAnalyzedMood(moodData);
+          } else {
+            // Fallback mood data if null
+            setAnalyzedMood({
+              keywords: [moodParam],
+              sentiment: 1,
+              originalText: moodParam
+            });
+          }
+          
+          // Update mood text in context
+          setMoodText(moodParam);
+          
+          // Clear URL parameter
+          navigate('/home', { replace: true });
+          
+          // Scroll to results
+          setTimeout(() => {
+            if (resultsRef.current) {
+              resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 500);
+        } catch (err) {
+          console.error('Error in auto-submit:', err);
+          setError(err instanceof Error ? err.message : 'Failed to analyze your mood');
+          setShowResults(true);
+          setAnalyzedMood({
+            keywords: [moodParam],
+            sentiment: 1,
+            originalText: moodParam
+          });
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+      
+      submitForm();
+    }
+  }, [location.search, analyzeMood, navigate, setMoodText]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,28 +329,58 @@ const Home: React.FC = () => {
   return (
     <Box 
       sx={{ 
-        minHeight: 'calc(100vh - 64px)', 
+        position: 'relative',
+        minHeight: 'calc(100vh - 80px)', 
         py: 4,
-        background: gradientBackground,
+        background: 'linear-gradient(135deg, #6247aa, #a06cd5, #7076e2)',
         backgroundSize: 'cover',
         backgroundAttachment: 'fixed',
+        overflow: 'hidden'
       }}
     >
-      <Container maxWidth="md">
+      {/* Animated canvas background */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 0
+        }}
+      />
+      
+      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
         <Fade in={true} timeout={1000}>
           <div>
             {!showResults ? (
-              <GradientPaper elevation={0}>
+              <GradientPaper elevation={0} sx={{ 
+                position: 'relative',
+                animation: 'fadeIn 1.2s',
+                '@keyframes fadeIn': {
+                  '0%': { opacity: 0, transform: 'translateY(20px)' },
+                  '100%': { opacity: 1, transform: 'translateY(0)' }
+                }
+              }}>
                 <Box sx={{ textAlign: 'center', mb: 4 }}>
                   <MusicNote 
                     sx={{ 
                       fontSize: 60, 
                       color: theme.palette.primary.main,
                       mb: 2,
-                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))'
+                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))',
+                      animation: 'float 3s infinite ease-in-out',
+                      '@keyframes float': {
+                        '0%': { transform: 'translateY(0px)' },
+                        '50%': { transform: 'translateY(-10px)' },
+                        '100%': { transform: 'translateY(0px)' }
+                      }
                     }} 
                   />
-                  <GradientTypography variant="h3">
+                  <GradientTypography variant="h3" sx={{
+                    textShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+                  }}>
                     How are you feeling today?
                   </GradientTypography>
                   
@@ -285,7 +490,13 @@ const Home: React.FC = () => {
                 ) : (
                   <>
                     {analyzedMood && (
-                      <ResultCard elevation={0}>
+                      <ResultCard elevation={0} sx={{
+                        animation: 'slideUp 0.8s ease-out',
+                        '@keyframes slideUp': {
+                          '0%': { transform: 'translateY(30px)', opacity: 0 },
+                          '100%': { transform: 'translateY(0)', opacity: 1 }
+                        }
+                      }}>
                         <Typography variant="h5" sx={{ 
                           color: theme.palette.primary.main,
                           fontWeight: 700,
@@ -311,7 +522,12 @@ const Home: React.FC = () => {
                                 color: 'white',
                                 fontWeight: 'bold',
                                 fontSize: '0.9rem',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                animation: `fadeInKeyword 0.5s ease-out ${0.1 * i}s both`,
+                                '@keyframes fadeInKeyword': {
+                                  '0%': { transform: 'scale(0.8)', opacity: 0 },
+                                  '100%': { transform: 'scale(1)', opacity: 1 }
+                                }
                               }}
                             >
                               {keyword}
@@ -332,7 +548,17 @@ const Home: React.FC = () => {
                     )}
                     
                     {tracks && tracks.length > 0 && (
-                      <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+                      <Paper elevation={3} sx={{ 
+                        p: 3, 
+                        mt: 3,
+                        position: 'relative',
+                        zIndex: 1,
+                        animation: 'fadeInUp 1s ease-out',
+                        '@keyframes fadeInUp': {
+                          '0%': { transform: 'translateY(30px)', opacity: 0 },
+                          '100%': { transform: 'translateY(0)', opacity: 1 }
+                        }
+                      }}>
                         <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#1DB954' }}>
                           Your Personalized Playlist
                         </Typography>

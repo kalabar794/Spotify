@@ -1,25 +1,56 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  TextField, 
-  Button, 
-  Paper, 
-  CircularProgress,
-  useTheme,
-  Fade,
-  styled,
-  IconButton,
-  Tooltip,
-  List,
-  ListItem,
-  Avatar
+import { useTheme } from '@mui/material/styles';
+import {
+    Container,
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Paper,
+    Fade,
+    Grid,
+    Grow,
+    CircularProgress,
+    Divider,
+    Chip,
+    List,
+    ListItem,
+    Avatar,
+    Snackbar,
+    Alert
 } from '@mui/material';
-import { MusicNote, Mood, PlayArrow, OpenInNew, Search } from '@mui/icons-material';
+import { MusicNote, Mood, PlayArrow, OpenInNew, Search, Pause } from '@mui/icons-material';
+
+// Define the Track and MoodAnalysis interfaces directly to avoid import errors
+interface Track {
+  spotifyId: string;
+  name: string;
+  artist: string;
+  album?: string;
+  albumArt?: string;
+  previewUrl?: string;
+}
+
+interface MoodAnalysis {
+  keywords: string[];
+  sentiment: number;
+  originalText: string;
+  colorScheme: {
+    primary: string;
+    secondary: string;
+    text: string;
+  };
+}
+
+// Import contexts directly
 import { useMood } from '../context/MoodContext';
 import { AuthContext } from '../context/AuthContext';
+import { 
+  styled,
+  IconButton,
+  Tooltip
+} from '@mui/material';
 
 const GradientPaper = styled(Paper)(({ theme }) => ({
   background: `linear-gradient(135deg, ${theme.palette.primary.light}15 0%, ${theme.palette.secondary.light}15 100%)`,
@@ -78,6 +109,9 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { isAuthenticated } = useContext(AuthContext);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,6 +183,62 @@ const Home: React.FC = () => {
   const gradientBackground = theme.palette.mode === 'dark'
     ? 'linear-gradient(135deg, rgba(30, 27, 75, 0.8) 0%, rgba(37, 16, 83, 0.8) 100%)'
     : 'linear-gradient(135deg, rgba(148, 0, 211, 0.1) 0%, rgba(75, 0, 130, 0.05) 100%)';
+
+  // Handle playing audio preview
+  const handlePlay = (track: Track) => {
+    // If already playing this track, stop it
+    if (playingId === track.spotifyId) {
+      // Find and stop any playing audio elements
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        audio.pause();
+      });
+      setPlayingId(null);
+      return;
+    }
+    
+    // If track has preview URL
+    if (track.previewUrl) {
+      try {
+        setIsLoadingAudio(true);
+        
+        // Create a new audio element for this playback
+        const audio = new Audio();
+        
+        audio.oncanplaythrough = () => {
+          setIsLoadingAudio(false);
+          setPlayingId(track.spotifyId);
+          audio.play().catch(err => {
+            console.error("Play error:", err);
+            setErrorMessage("Browser couldn't play the audio. Try opening in Spotify.");
+            setPlayingId(null);
+          });
+        };
+        
+        audio.onerror = () => {
+          console.error("Audio load error");
+          setIsLoadingAudio(false);
+          setErrorMessage("Audio failed to load. Opening in Spotify instead.");
+          window.open(`https://open.spotify.com/track/${track.spotifyId.startsWith('spotify:track:') ? track.spotifyId.split(':')[2] : track.spotifyId}`, '_blank');
+        };
+        
+        audio.onended = () => {
+          setPlayingId(null);
+        };
+        
+        // Set source and load
+        audio.src = track.previewUrl;
+        audio.load();
+      } catch (err) {
+        console.error("Audio setup error:", err);
+        setIsLoadingAudio(false);
+        window.open(`https://open.spotify.com/track/${track.spotifyId.startsWith('spotify:track:') ? track.spotifyId.split(':')[2] : track.spotifyId}`, '_blank');
+      }
+    } else {
+      // No preview URL, open directly in Spotify
+      window.open(`https://open.spotify.com/track/${track.spotifyId.startsWith('spotify:track:') ? track.spotifyId.split(':')[2] : track.spotifyId}`, '_blank');
+    }
+  };
 
   return (
     <Box 
@@ -379,14 +469,20 @@ const Home: React.FC = () => {
                                   
                                   <Box>
                                     {track.previewUrl && (
-                                      <Tooltip title="Play Preview">
+                                      <Tooltip title={playingId === track.spotifyId ? "Pause" : "Play Preview"}>
                                         <IconButton 
                                           color="primary" 
-                                          href={track.previewUrl} 
-                                          target="_blank"
+                                          onClick={() => handlePlay(track)}
                                           sx={{ color: '#1DB954' }}
+                                          disabled={isLoadingAudio && playingId !== track.spotifyId}
                                         >
-                                          <PlayArrow />
+                                          {isLoadingAudio && playingId !== track.spotifyId ? (
+                                            <CircularProgress size={24} color="inherit" />
+                                          ) : playingId === track.spotifyId ? (
+                                            <Pause />
+                                          ) : (
+                                            <PlayArrow />
+                                          )}
                                         </IconButton>
                                       </Tooltip>
                                     )}
@@ -424,6 +520,18 @@ const Home: React.FC = () => {
                         </Box>
                       </Paper>
                     )}
+                    
+                    {/* Error message for audio playback */}
+                    <Snackbar 
+                      open={errorMessage !== null} 
+                      autoHideDuration={6000} 
+                      onClose={() => setErrorMessage(null)}
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                    >
+                      <Alert onClose={() => setErrorMessage(null)} severity="warning" sx={{ width: '100%' }}>
+                        {errorMessage}
+                      </Alert>
+                    </Snackbar>
                     
                     {analyzedMood && tracks && tracks.length === 0 && (
                       <Paper

@@ -33,54 +33,84 @@ const Navbar: React.FC<NavbarProps> = ({ darkMode, setDarkMode }) => {
   };
 
   return (
-    <AppBar position="static" color="primary">
-      <Toolbar>
+    <AppBar 
+      position="static" 
+      sx={{ 
+        background: 'linear-gradient(to right, #6247aa, #a06cd5)',
+        boxShadow: 'none',
+        py: 1
+      }}
+    >
+      <Toolbar sx={{ minHeight: 80 }}>
         <IconButton
           edge="start"
           color="inherit"
           aria-label="menu"
-          sx={{ mr: 2 }}
+          sx={{ mr: 2, fontSize: 30 }}
           component={RouterLink}
           to="/"
         >
-          <MusicNote />
+          <MusicNote sx={{ fontSize: 30 }} />
         </IconButton>
         
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <Typography variant="h5" component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
           <Link component={RouterLink} to="/" color="inherit" underline="none">
             MoodMix
           </Link>
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={darkMode}
-                onChange={toggleDarkMode}
-                color="default"
-                icon={<Brightness7 />}
-                checkedIcon={<Brightness4 />}
-              />
-            }
-            label=""
-          />
-
+          <Button 
+            color="inherit" 
+            component={RouterLink} 
+            to="/home"
+            sx={{ 
+              fontWeight: 600,
+              mx: 1.5,
+              fontSize: '1rem',
+              px: 2,
+              py: 1,
+              '&:hover': {
+                background: 'rgba(255, 255, 255, 0.1)'
+              }
+            }}
+          >
+            EXPLORE
+          </Button>
+          
           {isAuthenticated ? (
             <>
               <Button 
                 color="inherit" 
                 component={RouterLink} 
                 to="/dashboard"
-                sx={{ mx: 1 }}
+                sx={{ 
+                  fontWeight: 600,
+                  mx: 1.5,
+                  fontSize: '1rem',
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    background: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
               >
-                Dashboard
+                DASHBOARD
               </Button>
               <Button 
                 color="inherit" 
                 onClick={handleLogout}
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    background: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
               >
-                Logout
+                LOGOUT
               </Button>
             </>
           ) : (
@@ -89,19 +119,51 @@ const Navbar: React.FC<NavbarProps> = ({ darkMode, setDarkMode }) => {
                 color="inherit" 
                 component={RouterLink} 
                 to="/login"
-                sx={{ mx: 1 }}
+                sx={{ 
+                  fontWeight: 600,
+                  mx: 1.5,
+                  fontSize: '1rem',
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    background: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
               >
-                Login
+                LOGIN
               </Button>
               <Button 
                 color="inherit" 
                 component={RouterLink} 
                 to="/register"
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    background: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
               >
-                Register
+                REGISTER
               </Button>
             </>
           )}
+          
+          <FormControlLabel
+            control={
+              <Switch
+                checked={darkMode}
+                onChange={toggleDarkMode}
+                color="default"
+                icon={<Brightness7 sx={{ fontSize: 24 }} />}
+                checkedIcon={<Brightness4 sx={{ fontSize: 24 }} />}
+              />
+            }
+            label=""
+            sx={{ ml: 2 }}
+          />
         </Box>
       </Toolbar>
     </AppBar>

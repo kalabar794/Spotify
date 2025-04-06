@@ -6,9 +6,8 @@ const mockData = require('../mockData');
 
 // Check if we're in mock mode (defined in server.js)
 const isMockMode = () => {
-  // This function is used to determine if we should use mock data
-  // It will check the global isDbConnected flag from server.js if available
-  return global.isDbConnected === false;
+  // Always use Spotify API, never use mock data
+  return false;
 };
 
 // Analyze mood from text

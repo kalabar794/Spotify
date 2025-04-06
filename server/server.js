@@ -641,22 +641,58 @@ app.post('/api/analyze-mood', async (req, res) => {
     
     console.log('Analyzed mood:', mood);
     
-    // Generate track recommendations based on mood
+    // Get tracks from Spotify API instead of mock data
     let tracks = [];
     
-    // CRITICAL FIX: Always generate tracks even if there's an issue
     try {
-      // Use mock data for development
-      console.log('Generating tracks for mood:', moodKeywords);
-      tracks = generateMockTracks(moodKeywords, sentiment);
+      // Initialize Spotify API
+      const spotifyApi = new SpotifyWebApi({
+        clientId: process.env.SPOTIFY_CLIENT_ID || 'YOUR_SPOTIFY_CLIENT_ID', // Update this with your actual client ID
+        clientSecret: process.env.SPOTIFY_CLIENT_SECRET || 'YOUR_SPOTIFY_CLIENT_SECRET', // Update this with your actual client secret
+        redirectUri: process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/callback'
+      });
+
+      // Get access token
+      const data = await spotifyApi.clientCredentialsGrant();
+      spotifyApi.setAccessToken(data.body['access_token']);
       
-      if (!tracks || tracks.length === 0) {
-        console.log('No tracks generated, using fallback');
-        tracks = happyTracks; // Always return at least happy tracks as fallback
+      // Map mood to Spotify parameters
+      const spotifyParams = mapMoodToSpotifyParams(moodKeywords, sentiment);
+      
+      // Get recommendations from Spotify
+      const recommendations = await spotifyApi.getRecommendations(spotifyParams);
+      
+      if (recommendations.body && recommendations.body.tracks) {
+        // Map Spotify tracks to our format
+        tracks = recommendations.body.tracks.map(track => ({
+          spotifyId: track.id,
+          name: track.name,
+          artist: track.artists.map(artist => artist.name).join(', '),
+          album: track.album.name,
+          albumArt: track.album.images[0]?.url,
+          previewUrl: track.preview_url
+        })).filter(track => track.previewUrl); // Only include tracks with preview URLs
+        
+        // Limit to 8 tracks with preview URLs
+        if (tracks.length < 8) {
+          // If we don't have enough tracks with preview URLs, fall back to mock data
+          const mockTracks = generateMockTracks(moodKeywords, sentiment);
+          // Add enough mock tracks to reach 8 tracks total
+          tracks = [...tracks, ...mockTracks.slice(0, 8 - tracks.length)];
+        } else {
+          tracks = tracks.slice(0, 8);
+        }
       }
-    } catch (trackError) {
-      console.error('Error generating tracks:', trackError);
-      tracks = happyTracks; // Use happy tracks as fallback
+      
+      // If no tracks from Spotify, use mock data as fallback
+      if (!tracks || tracks.length === 0) {
+        console.log('No tracks from Spotify, using mock data as fallback');
+        tracks = generateMockTracks(moodKeywords, sentiment);
+      }
+    } catch (spotifyError) {
+      console.error('Error getting tracks from Spotify:', spotifyError);
+      // Fall back to mock data if Spotify API fails
+      tracks = generateMockTracks(moodKeywords, sentiment);
     }
     
     // Return mood and tracks in one response
@@ -667,10 +703,12 @@ app.post('/api/analyze-mood', async (req, res) => {
     
   } catch (error) {
     console.error('Error in analyze-mood endpoint:', error);
+    // Even on error, return some tracks from mock data
+    const tracks = happyTracks.slice(0, 8);
     res.status(500).json({ 
       error: 'Internal server error', 
       message: error.message,
-      tracks: happyTracks // Even on error, return some tracks
+      tracks 
     });
   }
 });
@@ -689,48 +727,48 @@ function generateMockTracks(moodKeywords, sentiment) {
     // Convert all keywords to lowercase for consistent matching
     const lowerCaseKeywords = moodKeywords.map(keyword => keyword.toLowerCase().trim());
     
-    // Check for specific mood keywords
+    // Check for specific mood keywords and return 8 tracks per category
     if (lowerCaseKeywords.some(keyword => ['happy', 'excited', 'joyful', 'cheerful', 'glad'].includes(keyword))) {
       console.log('Returning happy tracks');
-      return happyTracks;
+      return happyTracks.slice(0, 8);
     }
     
     if (lowerCaseKeywords.some(keyword => ['calm', 'peaceful', 'relaxed', 'chill', 'quiet'].includes(keyword))) {
       console.log('Returning calm tracks');
-      return calmTracks;
+      return calmTracks.slice(0, 8);
     }
     
     if (lowerCaseKeywords.some(keyword => ['energetic', 'energic', 'motivated', 'pumped', 'energy', 'active'].includes(keyword))) {
       console.log('Returning energetic tracks');
-      return energeticTracks;
+      return energeticTracks.slice(0, 8);
     }
     
     if (lowerCaseKeywords.some(keyword => ['sad', 'depressed', 'melancholy', 'gloomy', 'unhappy'].includes(keyword))) {
       console.log('Returning sad tracks');
-      return sadTracks;
+      return sadTracks.slice(0, 8);
     }
     
     if (lowerCaseKeywords.some(keyword => ['romantic', 'love', 'passionate', 'loving'].includes(keyword))) {
       console.log('Returning romantic tracks');
-      return romanticTracks;
+      return romanticTracks.slice(0, 8);
     }
     
     if (lowerCaseKeywords.some(keyword => ['focused', 'concentrate', 'productive', 'study', 'concentration'].includes(keyword))) {
       console.log('Returning focused tracks');
-      return focusedTracks;
+      return focusedTracks.slice(0, 8);
     }
     
     // If no specific mood matched, check sentiment score
     if (sentiment !== undefined) {
       if (sentiment > 0.6) {
         console.log('Returning happy tracks based on positive sentiment');
-        return happyTracks;
+        return happyTracks.slice(0, 8);
       } else if (sentiment < 0) {
         console.log('Returning sad tracks based on negative sentiment');
-        return sadTracks;
+        return sadTracks.slice(0, 8);
       } else {
         console.log('Returning calm tracks based on neutral sentiment');
-        return calmTracks;
+        return calmTracks.slice(0, 8);
       }
     }
     
@@ -747,11 +785,11 @@ function generateMockTracks(moodKeywords, sentiment) {
 // Helper function to create a balanced mix of tracks from different categories
 function getMixedTracks() {
   return [
-    ...happyTracks.slice(0, 3),
-    ...energeticTracks.slice(0, 2),
-    ...calmTracks.slice(0, 2),
-    ...romanticTracks.slice(0, 2),
-    ...focusedTracks.slice(0, 1)
+    ...happyTracks.slice(0, 2),      // 2 happy tracks
+    ...energeticTracks.slice(0, 2),  // 2 energetic tracks
+    ...calmTracks.slice(0, 2),       // 2 calm tracks
+    ...romanticTracks.slice(0, 1),   // 1 romantic track
+    ...focusedTracks.slice(0, 1)     // 1 focused track
   ];
 }
 

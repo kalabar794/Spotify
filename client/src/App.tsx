@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
+import LandingPage from './pages/LandingPage';
 
 // Import UI components
 import Navbar from './components/Navbar';
@@ -62,18 +63,17 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BackgroundGradient>
-        <div className="App">
-          <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BackgroundGradient>
+      <div className="App">
+        <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
     </ThemeProvider>
   );
 }
