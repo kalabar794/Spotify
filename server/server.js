@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const SpotifyWebApi = require('spotify-web-api-node');
+const fetch = require('node-fetch');
 
 // Load environment variables
 dotenv.config();
@@ -522,6 +523,37 @@ app.use(express.urlencoded({ extended: true }));
 // Global flag for database connection status
 global.isDbConnected = false;
 
+// Spotify token refresh mechanism
+const refreshSpotifyToken = async () => {
+  try {
+    // Initialize Spotify API
+    const spotifyApi = new SpotifyWebApi({
+      clientId: process.env.SPOTIFY_CLIENT_ID,
+      clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+      redirectUri: process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/callback'
+    });
+    
+    const data = await spotifyApi.clientCredentialsGrant();
+    spotifyApi.setAccessToken(data.body['access_token']);
+    console.log('Spotify token refreshed, expires in', data.body['expires_in'], 'seconds');
+    
+    // Set timeout to refresh before expiration (subtract 60 seconds for safety)
+    const refreshTime = (data.body['expires_in'] - 60) * 1000;
+    setTimeout(refreshSpotifyToken, refreshTime);
+    
+    // Store the token globally
+    global.spotifyToken = data.body['access_token'];
+    global.spotifyTokenExpiration = Date.now() + (data.body['expires_in'] * 1000);
+  } catch (error) {
+    console.error('Error refreshing Spotify token:', error);
+    // Try again in 30 seconds if there was an error
+    setTimeout(refreshSpotifyToken, 30 * 1000);
+  }
+};
+
+// Fetch an initial token on server startup
+refreshSpotifyToken();
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/moodmix', {
   useNewUrlParser: true,
@@ -607,6 +639,11 @@ app.post('/api/spotify/recommendations', async (req, res) => {
     // Get recommendations
     const recommendations = await spotifyApi.getRecommendations(spotifyParams);
     
+    // Log an example track for debugging
+    if (recommendations.body && recommendations.body.tracks && recommendations.body.tracks.length > 0) {
+      console.log("Track data example:", JSON.stringify(recommendations.body.tracks[0], null, 2));
+    }
+    
     res.json(recommendations.body);
   } catch (error) {
     console.error('Error getting Spotify recommendations:', error);
@@ -663,6 +700,11 @@ app.post('/api/analyze-mood', async (req, res) => {
       const recommendations = await spotifyApi.getRecommendations(spotifyParams);
       
       if (recommendations.body && recommendations.body.tracks) {
+        // Log an example track for debugging
+        if (recommendations.body.tracks.length > 0) {
+          console.log("Track data example in analyze-mood:", JSON.stringify(recommendations.body.tracks[0], null, 2));
+        }
+        
         // Map Spotify tracks to our format
         tracks = recommendations.body.tracks.map(track => ({
           spotifyId: track.id,
@@ -970,6 +1012,73 @@ function mapMoodToSpotifyParams(moodKeywords, sentiment) {
   return params;
 }
 
+// Fix: make sure isMockMode function is defined before exporting it
+function isMockMode() {
+  // Always use Spotify API instead of mock data
+  return false;
+}
+
+// Add the proxy endpoint for Spotify previews
+app.get('/api/preview-proxy', async (req, res) => {
+  try {
+    const { url } = req.query;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'Preview URL is required' });
+    }
+    
+    // Fetch the audio file and pipe it to the response
+    const response = await fetch(url);
+    
+    // Set appropriate headers
+    res.set('Content-Type', response.headers.get('content-type') || 'audio/mpeg');
+    res.set('Accept-Ranges', 'bytes');
+    
+    // Pipe the response body to our response
+    response.body.pipe(res);
+  } catch (error) {
+    console.error('Preview proxy error:', error);
+    res.status(500).json({ error: 'Failed to proxy preview URL' });
+  }
+});
+
+// General CORS proxy for any URL
+app.get('/api/cors-proxy', async (req, res) => {
+  try {
+    const { url } = req.query;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    
+    console.log('Proxying request to:', url);
+    
+    // Make request to Spotify
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Proxy error: ${response.status} ${response.statusText}`);
+      return res.status(response.status).send('Proxy error');
+    }
+    
+    // Set content type header based on response
+    const contentType = response.headers.get('content-type');
+    if (contentType) {
+      res.set('Content-Type', contentType);
+    }
+    
+    // Stream the response data
+    response.body.pipe(res);
+  } catch (error) {
+    console.error('Proxy server error:', error);
+    res.status(500).send('Proxy server error');
+  }
+});
+
 // For Vercel serverless function compatibility
 if (process.env.NODE_ENV !== 'production') {
   const server = app.listen(PORT, () => {
@@ -986,4 +1095,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Export the Express API for Vercel
-module.exports = app; 
+module.exports = app;
+
+// Export functions for use in other modules
+module.exports = {
+  generateMockTracks,
+  isMockMode
+}; 

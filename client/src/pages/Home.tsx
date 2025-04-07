@@ -21,6 +21,7 @@ import { MusicNote, Mood, PlayArrow, OpenInNew, Search } from '@mui/icons-materi
 import { useMood } from '../context/MoodContext';
 import { AuthContext } from '../context/AuthContext';
 import TrackList from '../components/TrackList';
+import TrackItem from '../components/TrackItem';
 
 const GradientPaper = styled(Paper)(({ theme }) => ({
   background: `linear-gradient(135deg, ${theme.palette.primary.light}15 0%, ${theme.palette.secondary.light}15 100%)`,
@@ -548,17 +549,7 @@ const Home: React.FC = () => {
                     )}
                     
                     {tracks && tracks.length > 0 && (
-                      <Paper elevation={3} sx={{ 
-                        p: 3, 
-                        mt: 3,
-                        position: 'relative',
-                        zIndex: 1,
-                        animation: 'fadeInUp 1s ease-out',
-                        '@keyframes fadeInUp': {
-                          '0%': { transform: 'translateY(30px)', opacity: 0 },
-                          '100%': { transform: 'translateY(0)', opacity: 1 }
-                        }
-                      }}>
+                      <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
                         <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#1DB954' }}>
                           Your Personalized Playlist
                         </Typography>
@@ -566,33 +557,31 @@ const Home: React.FC = () => {
                           Based on your mood: <strong>{moodText}</strong>
                         </Typography>
                         
-                        <TrackList 
-                          tracks={tracks} 
-                          mood={analyzedMood ? {
-                            keywords: analyzedMood.keywords,
-                            sentiment: analyzedMood.sentiment,
-                            originalText: analyzedMood.originalText,
-                            colorScheme: {
-                              primary: theme.palette.primary.main,
-                              secondary: theme.palette.secondary.main,
-                              text: theme.palette.text.primary
-                            }
-                          } : null} 
-                        />
+                        <TrackList tracks={tracks} mood={analyzedMood ? {
+                          keywords: analyzedMood.keywords,
+                          sentiment: analyzedMood.sentiment,
+                          originalText: analyzedMood.originalText,
+                          colorScheme: {
+                            primary: theme.palette.primary.main,
+                            secondary: theme.palette.secondary.main,
+                            text: theme.palette.text.primary
+                          }
+                        } : null} />
                         
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
+                        <Box sx={{ mt: 4, textAlign: 'center' }}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Want to try another view?
+                          </Typography>
                           <Button 
-                            variant="contained" 
-                            color="primary" 
-                            href="https://open.spotify.com/search" 
-                            target="_blank"
-                            startIcon={<Search />}
-                            sx={{ 
-                              bgcolor: '#1DB954', 
-                              '&:hover': { bgcolor: '#1aa34a' } 
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                            onClick={() => {
+                              // Open a dialog or toggle visibility of alternative view
+                              // For simplicity, we'll just show an alert
+                              alert("Alternative track view can be implemented using the TrackItem component");
                             }}
                           >
-                            Explore More on Spotify
+                            Alternative View
                           </Button>
                         </Box>
                       </Paper>

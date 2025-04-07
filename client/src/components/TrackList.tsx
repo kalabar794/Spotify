@@ -16,6 +16,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { PlayArrow, Pause, ExpandMore, ExpandLess, PlaylistAdd, OpenInNew } from '@mui/icons-material';
+import AudioPlayer from './AudioPlayer';
 
 interface ColorScheme {
   primary: string;
@@ -50,62 +51,6 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
   const [expanded, setExpanded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Create a new audio element for each playback
-  const handlePlay = (track: Track) => {
-    // If already playing this track, stop it
-    if (playingId === track.spotifyId) {
-      // Find and stop any playing audio elements
-      const audioElements = document.querySelectorAll('audio');
-      audioElements.forEach(audio => {
-        audio.pause();
-      });
-      setPlayingId(null);
-      return;
-    }
-    
-    // If track has preview URL
-    if (track.previewUrl) {
-      try {
-        setIsLoadingAudio(true);
-        
-        // Create a new audio element for this playback
-        const audio = new Audio();
-        
-        audio.oncanplaythrough = () => {
-          setIsLoadingAudio(false);
-          setPlayingId(track.spotifyId);
-          audio.play().catch(err => {
-            console.error("Play error:", err);
-            setErrorMessage("Browser couldn't play the audio. Try opening in Spotify.");
-            setPlayingId(null);
-          });
-        };
-        
-        audio.onerror = () => {
-          console.error("Audio load error");
-          setIsLoadingAudio(false);
-          setErrorMessage("Audio failed to load. Opening in Spotify instead.");
-          openInSpotify(track.spotifyId);
-        };
-        
-        audio.onended = () => {
-          setPlayingId(null);
-        };
-        
-        // Set source and load
-        audio.src = track.previewUrl;
-        audio.load();
-      } catch (err) {
-        console.error("Audio setup error:", err);
-        setIsLoadingAudio(false);
-        openInSpotify(track.spotifyId);
-      }
-    } else {
-      // No preview URL, open directly in Spotify
-      openInSpotify(track.spotifyId);
-    }
-  };
-
   const openInSpotify = (spotifyId: string) => {
     const trackId = spotifyId.startsWith('spotify:track:') 
       ? spotifyId.split(':')[2] 
@@ -130,24 +75,7 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
               key={track.spotifyId}
               secondaryAction={
                 <Box>
-                  <Tooltip title={playingId === track.spotifyId ? "Pause" : (track.previewUrl ? "Play Preview" : "Open in Spotify")}>
-                    <IconButton 
-                      edge="end" 
-                      aria-label="play" 
-                      onClick={() => handlePlay(track)}
-                      color={playingId === track.spotifyId ? 'primary' : 'default'}
-                      sx={{ mr: 1, color: '#1DB954' }}
-                      disabled={isLoadingAudio && playingId !== track.spotifyId}
-                    >
-                      {isLoadingAudio && playingId !== track.spotifyId ? (
-                        <CircularProgress size={24} color="inherit" />
-                      ) : playingId === track.spotifyId ? (
-                        <Pause />
-                      ) : (
-                        <PlayArrow />
-                      )}
-                    </IconButton>
-                  </Tooltip>
+                  <AudioPlayer previewUrl={track.previewUrl} />
                   <Tooltip title="Open in Spotify">
                     <IconButton 
                       edge="end" 
@@ -177,6 +105,13 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
                   src={track.albumArt} 
                   variant="rounded"
                   sx={{ width: 56, height: 56, mr: 1 }}
+                  imgProps={{
+                    onError: (e) => {
+                      // @ts-ignore - TypeScript doesn't know about currentTarget.src
+                      e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%231DB954"/><text x="50%" y="50%" font-family="Arial" font-size="14" fill="white" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>';
+                      console.log('Album image failed to load, using fallback data URI');
+                    }
+                  }}
                 />
               </ListItemAvatar>
               <ListItemText

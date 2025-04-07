@@ -1,0 +1,151 @@
+.audio-player {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.play-button {
+  background-color: #1DB954;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.play-button:hover:not(:disabled) {
+  background-color: #1ed760;
+  transform: scale(1.05);
+}
+
+.play-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.play-button.error {
+  background-color: #ff5555;
+}
+
+.error-message {
+  color: #ff5555;
+  font-size: 12px;
+}
+
+.test-button {
+  background-color: #7b3dff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.test-button:hover {
+  background-color: #8b4eff;
+}
+
+.controls-button {
+  background-color: #ff9100;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.controls-button:hover {
+  background-color: #ffaa33;
+}
+
+.log-button {
+  background-color: #00a3e0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.log-button:hover {
+  background-color: #33b5e5;
+}
+
+.debug-info {
+  width: 100%;
+  margin-top: 5px;
+  padding: 4px 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #666;
+  max-width: 400px;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.2;
+}
+
+.direct-audio {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.audio-log {
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #f8f8f8;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: monospace;
+}
+
+.log-title {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.log-entries {
+  padding: 0;
+}
+
+.log-entry {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #666;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+} 

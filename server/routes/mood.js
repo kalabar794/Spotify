@@ -87,37 +87,46 @@ router.post('/recommendations', async (req, res) => {
     // Get recommendations
     const recommendations = await spotifyApi.getRecommendations(params);
     
-    // Format response
-    const formattedTracks = recommendations.body.tracks.map(track => ({
-      spotifyId: track.id,
-      name: track.name,
-      artist: track.artists[0].name,
-      album: track.album.name,
-      albumArt: track.album.images[0]?.url,
-      previewUrl: track.preview_url
-    }));
+    // Only include tracks with valid preview URLs
+    const tracksWithPreviews = recommendations.body.tracks
+      .filter(track => track.preview_url)
+      .map(track => ({
+        spotifyId: track.id,
+        name: track.name,
+        artist: track.artists.map(artist => artist.name).join(', '),
+        album: track.album.name,
+        albumArt: track.album.images[0]?.url,
+        previewUrl: track.preview_url
+      }));
     
-    res.json(formattedTracks);
+    // Make sure we're sending at least 8 tracks if possible
+    if (tracksWithPreviews.length >= 8) {
+      res.json(tracksWithPreviews.slice(0, 8));
+    } else {
+      // Not enough tracks with previews, fall back to mock data to fill the gap
+      console.log(`Only found ${tracksWithPreviews.length} tracks with previews, adding mock data`);
+      // Import the generateMockTracks function from the server
+      const generateMockTracks = require('../server').generateMockTracks;
+      // Get mock tracks based on mood and sentiment
+      const mockTracks = generateMockTracks(moodKeywords, sentiment).slice(0, 8 - tracksWithPreviews.length);
+      res.json([...tracksWithPreviews, ...mockTracks]);
+    }
   } catch (error) {
     console.error('Recommendation error:', error);
     
     // If there's an error with Spotify API, fall back to mock data
     console.log('Falling back to mock data due to error');
-    const mockTracks = mockData.playlists[0].tracks.map(track => ({
-      spotifyId: track.spotifyUri.split(':')[2],
-      name: track.name,
-      artist: track.artist,
-      album: 'Mock Album (Error Fallback)',
-      albumArt: 'https://via.placeholder.com/300',
-      previewUrl: null
-    }));
     
-    res.json({
-      tracks: mockTracks,
-      mockMode: true,
-      error: 'Error connecting to Spotify API, using mock data',
-      note: "Using mock data mode due to Spotify API error"
-    });
+    // Import the generateMockTracks function from the server
+    const generateMockTracks = require('../server').generateMockTracks;
+    
+    // Extract mood keywords and sentiment from request, or use defaults
+    const { moodKeywords = ['happy'], sentiment = 0.5 } = req.body;
+    
+    // Generate appropriate mock tracks based on mood
+    const mockTracks = generateMockTracks(moodKeywords, sentiment).slice(0, 8);
+    
+    res.json(mockTracks);
   }
 });
 
