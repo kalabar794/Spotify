@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { PlayArrow, Pause, ExpandMore, ExpandLess, PlaylistAdd, OpenInNew } from '@mui/icons-material';
 import AudioPlayer from './AudioPlayer';
+import TrackAvatar from './TrackAvatar';
 
 interface ColorScheme {
   primary: string;
@@ -52,6 +53,7 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
   const [expanded, setExpanded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [imageLoadErrors, setImageLoadErrors] = useState<Record<string, boolean>>({});
   
   // Initialize audio context on component mount
   useEffect(() => {
@@ -188,6 +190,25 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
     setErrorMessage(null);
   };
 
+  const handleImageError = (trackId: string) => {
+    setImageLoadErrors(prev => ({
+      ...prev,
+      [trackId]: true
+    }));
+  };
+
+  const getFallbackImage = (track: Track) => {
+    const initials = track.name.charAt(0) + (track.artist ? track.artist.charAt(0) : '');
+    const color = mood?.colorScheme?.primary || '#1DB954';
+    
+    return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+      <rect width="100%" height="100%" fill="${color.replace('#', '%23')}"/>
+      <text x="50%" y="50%" font-family="Arial" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle">
+        ${initials.toUpperCase()}
+      </text>
+    </svg>`;
+  };
+
   const displayedTracks = expanded ? tracks : tracks.slice(0, 5);
 
   return (
@@ -253,17 +274,26 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
               }}
             >
               <ListItemAvatar>
-                <Avatar 
-                  alt={track.name} 
-                  src={track.albumArt} 
+                <TrackAvatar 
+                  data-testid="track-image"
+                  alt={`${track.name} by ${track.artist}`}
+                  src={imageLoadErrors[track.spotifyId] ? getFallbackImage(track) : track.albumArt}
                   variant="rounded"
-                  sx={{ width: 56, height: 56, mr: 1 }}
-                  imgProps={{
-                    onError: (e) => {
-                      // @ts-ignore - TypeScript doesn't know about currentTarget.src
-                      e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%231DB954"/><text x="50%" y="50%" font-family="Arial" font-size="14" fill="white" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>';
-                      console.log('Album image failed to load, using fallback data URI');
+                  sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    mr: 1,
+                    bgcolor: mood?.colorScheme?.primary || '#1DB954',
+                    '& img': {
+                      objectFit: 'cover',
+                      width: '100%',
+                      height: '100%'
                     }
+                  }}
+                  imgProps={{
+                    onError: () => handleImageError(track.spotifyId),
+                    loading: "lazy",
+                    style: { width: '100%', height: '100%' }
                   }}
                 />
               </ListItemAvatar>

@@ -1,167 +1,197 @@
 const natural = require('natural');
+const SpotifyWebApi = require('spotify-web-api-node');
+const rateLimit = require('express-rate-limit');
+const { sanitizeInput } = require('../middleware/validate');
+
+// Initialize Natural's sentiment analyzer
+const analyzer = new natural.SentimentAnalyzer('English', natural.PorterStemmer, 'afinn');
 const tokenizer = new natural.WordTokenizer();
-const stemmer = natural.PorterStemmer;
 
-// Keywords associated with different moods
-const moodKeywords = {
-  happy: ['happy', 'joy', 'ecstatic', 'cheerful', 'excited', 'delighted', 'pleased', 'thrilled', 'blissful', 'content', 'good', 'great', 'wonderful', 'fantastic', 'positive'],
-  sad: ['sad', 'depressed', 'unhappy', 'melancholy', 'gloomy', 'miserable', 'down', 'blue', 'heartbroken', 'somber', 'upset', 'hurt', 'disappointed'],
-  angry: ['angry', 'mad', 'furious', 'irritated', 'annoyed', 'enraged', 'hostile', 'bitter', 'frustrated', 'outraged', 'rage', 'hate', 'upset'],
-  calm: ['calm', 'peaceful', 'tranquil', 'relaxed', 'serene', 'mellow', 'chill', 'quiet', 'gentle', 'soothing', 'relax', 'peaceful', 'zen'],
-  energetic: ['energetic', 'lively', 'active', 'dynamic', 'vibrant', 'spirited', 'peppy', 'upbeat', 'vigorous', 'animated', 'energy', 'energic', 'pumped', 'motivated', 'hype'],
-  anxious: ['anxious', 'worried', 'nervous', 'stressed', 'uneasy', 'tense', 'restless', 'agitated', 'concerned', 'apprehensive', 'anxiety', 'fear', 'scared'],
-  romantic: ['romantic', 'love', 'passionate', 'intimate', 'affectionate', 'tender', 'warm', 'sensual', 'dreamy', 'adoring', 'loving', 'romance'],
-  nostalgic: ['nostalgic', 'reminiscent', 'sentimental', 'yearning', 'wistful', 'longing', 'memories', 'remembering', 'retrospective', 'reflective', 'nostalgia', 'remember'],
-  focused: ['focused', 'concentrate', 'attentive', 'determined', 'productive', 'studious', 'mindful', 'diligent', 'dedicated', 'committed', 'focus', 'concentration']
-};
-
-// Stemmed mood keywords for better matching
-const stemmedMoodKeywords = {};
-Object.keys(moodKeywords).forEach(mood => {
-  stemmedMoodKeywords[mood] = moodKeywords[mood].map(word => stemmer.stem(word));
+// Rate limiter for mood analysis
+const moodAnalysisLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // limit each IP to 50 requests per windowMs
+  message: 'Too many mood analysis requests, please try again later'
 });
 
-// Simple sentiment analysis function
-function analyzeSentiment(text) {
-  const analyzer = new natural.SentimentAnalyzer('English', stemmer, 'afinn');
-  const tokens = tokenizer.tokenize(text);
-  return analyzer.getSentiment(tokens);
-}
+// Spotify API configuration
+const spotifyApi = new SpotifyWebApi({
+  clientId: process.env.SPOTIFY_CLIENT_ID,
+  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+  redirectUri: process.env.SPOTIFY_REDIRECT_URI
+});
+
+// Cache for Spotify tokens to reduce API calls
+let spotifyToken = null;
+let tokenExpiryTime = null;
+
+// Refresh Spotify token if needed
+const ensureSpotifyToken = async () => {
+  if (!spotifyToken || Date.now() >= tokenExpiryTime) {
+    try {
+      const data = await spotifyApi.clientCredentialsGrant();
+      spotifyToken = data.body['access_token'];
+      tokenExpiryTime = Date.now() + (data.body['expires_in'] * 1000) - 60000; // Subtract 1 minute for safety
+      spotifyApi.setAccessToken(spotifyToken);
+    } catch (error) {
+      console.error('Error refreshing Spotify token:', error);
+      throw new Error('Failed to refresh Spotify token');
+    }
+  }
+  return spotifyToken;
+};
+
+// Mood keywords and their associated Spotify parameters
+const moodMappings = {
+  happy: {
+    valence: { min: 0.7 },
+    energy: { min: 0.6 },
+    genres: ['pop', 'dance', 'happy']
+  },
+  sad: {
+    valence: { max: 0.3 },
+    energy: { max: 0.4 },
+    genres: ['sad', 'acoustic', 'piano']
+  },
+  energetic: {
+    energy: { min: 0.8 },
+    tempo: { min: 120 },
+    genres: ['dance', 'electronic', 'workout']
+  },
+  calm: {
+    energy: { max: 0.4 },
+    instrumentalness: { min: 0.3 },
+    genres: ['ambient', 'chill', 'sleep']
+  },
+  focused: {
+    energy: { target: 0.5 },
+    instrumentalness: { min: 0.3 },
+    genres: ['focus', 'study', 'classical']
+  }
+};
 
 // Extract mood keywords from text
-function extractMoodKeywords(text) {
-  const tokens = tokenizer.tokenize(text.toLowerCase());
-  const stemmedTokens = tokens.map(token => stemmer.stem(token));
+const extractMoodKeywords = (text) => {
+  // Sanitize input
+  const sanitizedText = sanitizeInput(text);
   
-  const foundMoods = [];
+  // Tokenize and normalize text
+  const tokens = tokenizer.tokenize(sanitizedText.toLowerCase());
   
-  // Check each mood category
-  Object.keys(stemmedMoodKeywords).forEach(mood => {
-    const moodStemmedWords = stemmedMoodKeywords[mood];
-    
-    // Check if any of the stemmed tokens match the mood keywords
-    const matched = stemmedTokens.some(token => 
-      moodStemmedWords.includes(token)
-    );
-    
-    if (matched) {
-      foundMoods.push(mood);
-    }
-  });
-  
-  // Also check for direct string includes for partial matches
-  if (foundMoods.length === 0) {
-    const lowerText = text.toLowerCase();
-    
-    // Check common word variants that might not stem correctly
-    if (lowerText.includes('energ')) foundMoods.push('energetic');
-    if (lowerText.includes('excit')) foundMoods.push('happy');
-    if (lowerText.includes('joy')) foundMoods.push('happy');
-    if (lowerText.includes('good')) foundMoods.push('happy');
-    if (lowerText.includes('relax')) foundMoods.push('calm');
-    if (lowerText.includes('sad')) foundMoods.push('sad');
-    if (lowerText.includes('ang')) foundMoods.push('angry');
-  }
-  
-  // If no moods found, infer from sentiment
-  if (foundMoods.length === 0) {
-    const sentiment = analyzeSentiment(text);
-    if (sentiment > 0.3) {
-      foundMoods.push('happy');
-    } else if (sentiment < -0.3) {
-      foundMoods.push('sad');
-    } else {
-      // For neutral sentiment, check the text for indicators
-      const lowerText = text.toLowerCase();
-      if (lowerText.includes('music') || lowerText.includes('listen') || lowerText.includes('song')) {
-        foundMoods.push('focused'); // Assume focus if talking about music
-      } else {
-        foundMoods.push('calm'); // Default to calm
-      }
-    }
-  }
-  
-  console.log('Extracted mood keywords:', foundMoods, 'from text:', text);
-  return foundMoods;
-}
-
-// Generate color scheme based on mood
-function generateColorScheme(moodKeywords, sentiment) {
-  let colorScheme = {
-    primary: '#6200ea',   // Default purple
-    secondary: '#03dac6', // Default teal
-    text: '#ffffff'       // Default white
+  // Define mood keyword patterns
+  const moodPatterns = {
+    happy: /\b(happy|joy|excited|cheerful|good|great|positive)\b/,
+    sad: /\b(sad|depressed|gloomy|melancholy|down|unhappy)\b/,
+    energetic: /\b(energetic|active|energized|pumped|motivated|energy)\b/,
+    calm: /\b(calm|peaceful|relaxed|chill|tranquil|mellow)\b/,
+    focused: /\b(focused|productive|concentration|study|work)\b/
   };
   
-  // Happy colors
-  if (moodKeywords.includes('happy') || moodKeywords.includes('energetic') || sentiment > 0.5) {
-    colorScheme = {
-      primary: '#ffab00',   // Amber
-      secondary: '#ff6d00',  // Orange
-      text: '#000000'       // Black
-    };
-  } 
-  // Calm/relaxed colors
-  else if (moodKeywords.includes('calm') || moodKeywords.includes('focused')) {
-    colorScheme = {
-      primary: '#0288d1',   // Light Blue
-      secondary: '#26a69a',  // Teal
-      text: '#ffffff'       // White
-    };
-  }
-  // Sad colors
-  else if (moodKeywords.includes('sad') || sentiment < -0.3) {
-    colorScheme = {
-      primary: '#0d47a1',   // Deep Blue
-      secondary: '#263238',  // Blue Grey
-      text: '#ffffff'       // White
-    };
-  }
-  // Romantic colors
-  else if (moodKeywords.includes('romantic')) {
-    colorScheme = {
-      primary: '#ad1457',   // Pink
-      secondary: '#e91e63',  // Light Pink
-      text: '#ffffff'       // White
-    };
-  }
-  // Angry colors
-  else if (moodKeywords.includes('angry')) {
-    colorScheme = {
-      primary: '#d50000',   // Red
-      secondary: '#bf360c',  // Deep Orange
-      text: '#ffffff'       // White
-    };
-  }
-  // Nostalgic colors
-  else if (moodKeywords.includes('nostalgic')) {
-    colorScheme = {
-      primary: '#4e342e',   // Brown
-      secondary: '#8d6e63',  // Light Brown
-      text: '#ffffff'       // White
-    };
-  }
+  // Find matching moods
+  const detectedMoods = Object.entries(moodPatterns)
+    .filter(([_, pattern]) => pattern.test(sanitizedText))
+    .map(([mood]) => mood);
   
-  return colorScheme;
-}
+  return detectedMoods.length > 0 ? detectedMoods : ['neutral'];
+};
 
-// Main function to analyze mood from text
-function analyzeMood(text) {
-  const sentiment = analyzeSentiment(text);
-  const keywords = extractMoodKeywords(text);
-  const colorScheme = generateColorScheme(keywords, sentiment);
+// Analyze sentiment of text
+const analyzeSentiment = (text) => {
+  // Sanitize input
+  const sanitizedText = sanitizeInput(text);
   
-  console.log('Analyzed mood:', { keywords, sentiment, originalText: text });
+  // Tokenize text
+  const tokens = tokenizer.tokenize(sanitizedText);
+  
+  // Get sentiment score
+  const score = analyzer.getSentiment(tokens);
+  
   return {
-    keywords,
-    sentiment,
-    originalText: text,
-    colorScheme
+    score,
+    magnitude: Math.abs(score),
+    label: score > 0.2 ? 'positive' : score < -0.2 ? 'negative' : 'neutral'
   };
-}
+};
+
+// Get Spotify recommendations based on mood
+const getSpotifyRecommendations = async (moodKeywords, sentiment) => {
+  try {
+    await ensureSpotifyToken();
+    
+    // Get parameters for primary mood
+    const primaryMood = moodKeywords[0];
+    const moodParams = moodMappings[primaryMood] || {};
+    
+    // Build recommendation parameters
+    const params = {
+      limit: 10,
+      market: 'US',
+      seed_genres: moodParams.genres || ['pop'],
+      ...moodParams.valence,
+      ...moodParams.energy,
+      ...moodParams.tempo,
+      ...moodParams.instrumentalness
+    };
+    
+    // Adjust parameters based on sentiment
+    if (sentiment.score > 0.6) {
+      params.min_valence = 0.7;
+    } else if (sentiment.score < -0.3) {
+      params.max_valence = 0.3;
+    }
+    
+    // Get recommendations from Spotify
+    const response = await spotifyApi.getRecommendations(params);
+    
+    // Format tracks
+    return response.body.tracks.map(track => ({
+      spotifyId: track.id,
+      name: track.name,
+      artist: track.artists.map(artist => artist.name).join(', '),
+      album: track.album.name,
+      albumArt: track.album.images[0]?.url,
+      previewUrl: track.preview_url
+    })).filter(track => track.previewUrl);
+    
+  } catch (error) {
+    console.error('Error getting Spotify recommendations:', error);
+    throw new Error('Failed to get music recommendations');
+  }
+};
+
+// Main mood analysis function
+const analyzeMood = async (text) => {
+  try {
+    // Input validation
+    if (!text || typeof text !== 'string') {
+      throw new Error('Invalid input text');
+    }
+    
+    // Extract mood keywords
+    const moodKeywords = extractMoodKeywords(text);
+    
+    // Analyze sentiment
+    const sentiment = analyzeSentiment(text);
+    
+    // Get music recommendations
+    const tracks = await getSpotifyRecommendations(moodKeywords, sentiment);
+    
+    return {
+      mood: {
+        keywords: moodKeywords,
+        sentiment,
+        originalText: text
+      },
+      tracks: tracks.slice(0, 8) // Limit to 8 tracks
+    };
+    
+  } catch (error) {
+    console.error('Mood analysis error:', error);
+    throw error;
+  }
+};
 
 module.exports = {
   analyzeMood,
-  analyzeSentiment,
-  extractMoodKeywords
+  moodAnalysisLimiter
 }; 

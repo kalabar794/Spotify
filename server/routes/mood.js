@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const moodAnalysisService = require('../services/moodAnalysis');
+const { auth } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { analyzeMood, moodAnalysisLimiter } = require('../services/moodAnalysis');
+const { spotifyApiLimiter } = require('../services/spotify');
+const User = require('../models/User');
 const SpotifyWebApi = require('spotify-web-api-node');
 const mockData = require('../mockData');
 
@@ -10,27 +14,172 @@ const isMockMode = () => {
   return false;
 };
 
-// Analyze mood from text
-router.post('/analyze', (req, res) => {
+// Analyze mood and get music recommendations
+router.post('/analyze', [
+  auth,
+  moodAnalysisLimiter,
+  spotifyApiLimiter,
+  validate.analyzeMood
+], async (req, res) => {
   try {
     const { text } = req.body;
-    
-    if (!text) {
-      return res.status(400).json({ message: 'Text input is required' });
+    const userId = req.user.id;
+
+    // Get user preferences (if any)
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-    
-    const moodAnalysis = moodAnalysisService.analyzeMood(text);
-    
-    // If we're in mock mode, add a note to the response
-    if (isMockMode()) {
-      moodAnalysis.mockMode = true;
-      moodAnalysis.note = "Using mock data mode - MongoDB connection unavailable";
+
+    // Analyze mood and get recommendations
+    const result = await analyzeMood(text);
+
+    // Store mood analysis in user history
+    user.moodHistory = user.moodHistory || [];
+    user.moodHistory.unshift({
+      text,
+      mood: result.mood,
+      timestamp: Date.now()
+    });
+
+    // Keep only last 10 entries
+    if (user.moodHistory.length > 10) {
+      user.moodHistory = user.moodHistory.slice(0, 10);
     }
-    
-    res.json(moodAnalysis);
+
+    await user.save();
+
+    res.json(result);
+
   } catch (error) {
     console.error('Mood analysis error:', error);
-    res.status(500).json({ message: 'Error analyzing mood' });
+    res.status(500).json({ 
+      error: 'Mood analysis failed',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Get user's mood history
+router.get('/history', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      history: user.moodHistory || []
+    });
+
+  } catch (error) {
+    console.error('Get mood history error:', error);
+    res.status(500).json({ error: 'Failed to get mood history' });
+  }
+});
+
+// Delete mood history entry
+router.delete('/history/:entryId', auth, async (req, res) => {
+  try {
+    const { entryId } = req.params;
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Find and remove the entry
+    const entryIndex = user.moodHistory.findIndex(
+      entry => entry._id.toString() === entryId
+    );
+
+    if (entryIndex === -1) {
+      return res.status(404).json({ error: 'History entry not found' });
+    }
+
+    user.moodHistory.splice(entryIndex, 1);
+    await user.save();
+
+    res.json({ message: 'History entry deleted successfully' });
+
+  } catch (error) {
+    console.error('Delete mood history error:', error);
+    res.status(500).json({ error: 'Failed to delete history entry' });
+  }
+});
+
+// Clear all mood history
+router.delete('/history', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.moodHistory = [];
+    await user.save();
+
+    res.json({ message: 'Mood history cleared successfully' });
+
+  } catch (error) {
+    console.error('Clear mood history error:', error);
+    res.status(500).json({ error: 'Failed to clear mood history' });
+  }
+});
+
+// Get mood statistics
+router.get('/stats', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Calculate mood statistics
+    const stats = {
+      totalEntries: user.moodHistory?.length || 0,
+      moodDistribution: {},
+      averageSentiment: 0,
+      mostFrequentMood: null,
+      timeOfDay: {
+        morning: 0,
+        afternoon: 0,
+        evening: 0,
+        night: 0
+      }
+    };
+
+    if (stats.totalEntries > 0) {
+      // Calculate mood distribution and sentiment average
+      let totalSentiment = 0;
+      user.moodHistory.forEach(entry => {
+        // Mood distribution
+        entry.mood.keywords.forEach(keyword => {
+          stats.moodDistribution[keyword] = (stats.moodDistribution[keyword] || 0) + 1;
+        });
+
+        // Sentiment average
+        totalSentiment += entry.mood.sentiment.score;
+
+        // Time of day distribution
+        const hour = new Date(entry.timestamp).getHours();
+        if (hour >= 5 && hour < 12) stats.timeOfDay.morning++;
+        else if (hour >= 12 && hour < 17) stats.timeOfDay.afternoon++;
+        else if (hour >= 17 && hour < 22) stats.timeOfDay.evening++;
+        else stats.timeOfDay.night++;
+      });
+
+      // Calculate averages and most frequent mood
+      stats.averageSentiment = totalSentiment / stats.totalEntries;
+      stats.mostFrequentMood = Object.entries(stats.moodDistribution)
+        .sort((a, b) => b[1] - a[1])[0]?.[0];
+    }
+
+    res.json({ stats });
+
+  } catch (error) {
+    console.error('Get mood stats error:', error);
+    res.status(500).json({ error: 'Failed to get mood statistics' });
   }
 });
 

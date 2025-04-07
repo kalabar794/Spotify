@@ -1,0 +1,49 @@
+{
+  "tracks": [
+    {
+      "name": "Happy",
+      "artist": "Pharrell Williams",
+      "album": "G I R L",
+      "spotifyId": "6NPVjNh8Jhru9xOmyQigds",
+      "previewUrl": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKK3XdujQfBuGIYhicIQeD4cHnMYIN4PggwcH8Hw4ggwfBA/BAEHAIHg+CDHiCIYfQQYPggaDgiCB/4PgQCD4Ig+CIOAQPh8QfAkHwQY8fB5w4IPggCEAwIAOgAwAAwBuBgYLgjgAIAAAAACsAAADgAA/8YAAAONiZCXjYAAAAMAAAMAADA4CAgGAAAEAAAOAB+JZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==",
+      "albumArt": "https://i.scdn.co/image/ab67616d0000b273e8107e6d9214d8be4289b0ad"
+    },
+    {
+      "name": "Dancing Queen",
+      "artist": "ABBA",
+      "album": "Arrival",
+      "spotifyId": "2oF7FZHIJbzjeEXZ3D0Ku4",
+      "previewUrl": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKK3XdujQfBuGIYhicIQeD4cHnMYIN4PggwcH8Hw4ggwfBA/BAEHAIHg+CDHiCIYfQQYPggaDgiCB/4PgQCD4Ig+CIOAQPh8QfAkHwQY8fB5w4IPggCEAwIAOgAwAAwBuBgYLgjgAIAAAAACsAAADgAA/8YAAAONiZCXjYAAAAMAAAMAADA4CAgGAAAEAAAOAB+JZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==",
+      "albumArt": "https://i.scdn.co/image/ab67616d0000b273f0895e29db88ed3505ea7239"
+    },
+    {
+      "name": "Someone Like You",
+      "artist": "Adele",
+      "album": "21",
+      "spotifyId": "4kflIGfjdZJW4ot2ioixTB",
+      "previewUrl": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKKrrdukYPgbxsHwbB8MAQdjBBvB8EGDzoMHwfggwcH4Pgg4BAIHg+CDHiCIYfQQYPggaDgiCB4IOAQCDgEDwJB8EGPHwecOCD4IAhAMCADoAMAAMAYAgYLgjgAIAAAAACsAAADgAA/8YAAAONiZCXjYAAAAMAAAMAADD4CAgGAAAEAAAOAB+JZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==",
+      "albumArt": "https://i.scdn.co/image/ab67616d0000b27319d85a472f328a6ed9b704cf"
+    },
+    {
+      "name": "Weightless",
+      "artist": "Marconi Union",
+      "album": "Weightless",
+      "spotifyId": "0t3ZvGKlmYmVsDzBJAXK8C",
+      "previewUrl": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKKwLumkYPg+D4Ng+DIbDYwQbwfBBg86DB8HwQcHB8HwQY8QRB8PggwcBkEDwQPBEEDwfAgEHwRB8EQfBBjx8HnDgg+CAIQDAgA6ADAADAGAIHg+CDgAIAAAAAKwAAAOAAAPxgAAA42JkJeNgAAAAwAAAwAAMPgICAYAAAQAAA4AH4lkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==",
+      "albumArt": "https://i.scdn.co/image/ab67616d0000b273f71b02b19a8e421dfa201fdc"
+    },
+    {
+      "name": "External Track with Error",
+      "artist": "Test Artist",
+      "album": "Test Album",
+      "spotifyId": "errortest123",
+      "previewUrl": "https://broken-url-for-testing.com/audio.mp3",
+      "albumArt": "https://i.scdn.co/image/ab67616d0000b2737f5e8d0f86e3620372a5bfc8"
+    }
+  ],
+  "mood": {
+    "keywords": ["happy", "energy", "upbeat"],
+    "sentiment": 0.8,
+    "originalText": "Happy energy"
+  }
+} 

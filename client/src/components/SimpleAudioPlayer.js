@@ -7,6 +7,7 @@ const SimpleAudioPlayer = ({ source }) => {
   const audioRef = useRef(null);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [attemptedProxy, setAttemptedProxy] = useState(false);
 
   // Function to generate a test beep sound for debugging
   const playTestSound = () => {
@@ -15,6 +16,14 @@ const SimpleAudioPlayer = ({ source }) => {
       
       // Create audio context
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Resume audio context if suspended (required by some browsers)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          console.log('AudioContext resumed successfully');
+        });
+      }
+      
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -57,19 +66,42 @@ const SimpleAudioPlayer = ({ source }) => {
         audioRef.current = new Audio();
       }
       
+      // Remove any existing event listeners to prevent duplicates
+      audioRef.current.oncanplaythrough = null;
+      audioRef.current.onended = null;
+      audioRef.current.ontimeupdate = null;
+      audioRef.current.onerror = null;
+      
       // Set up event listeners
       audioRef.current.oncanplaythrough = () => {
         setDebugMessage('Audio ready to play through');
+        // Create and resume audio context to enable audio in browsers that block autoplay
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        
         audioRef.current.play()
           .then(() => {
             setIsPlaying(true);
             setDebugMessage('Audio playing');
-            setDuration(audioRef.current.duration);
+            setDuration(audioRef.current.duration || 30); // Default to 30s if duration unknown
           })
           .catch(err => {
             setAudioError(true);
             setDebugMessage(`Play error: ${err.message}`);
             console.error('Audio play error:', err);
+            
+            // Try playing with a user gesture handler as fallback
+            document.addEventListener('click', function playOnGesture() {
+              audioRef.current.play()
+                .then(() => {
+                  setIsPlaying(true);
+                  setDebugMessage('Audio playing after user gesture');
+                  document.removeEventListener('click', playOnGesture);
+                })
+                .catch(e => console.error('Still cannot play after gesture:', e));
+            }, { once: true });
           });
       };
       
@@ -86,29 +118,66 @@ const SimpleAudioPlayer = ({ source }) => {
       };
       
       audioRef.current.onerror = (e) => {
+        const errorMsg = e.target.error ? e.target.error.message : 'Unknown error';
+        console.error('Audio error:', e, errorMsg);
         setAudioError(true);
         setIsPlaying(false);
-        setDebugMessage(`Audio error: ${e.target.error ? e.target.error.message : 'Unknown error'}`);
-        console.error('Audio error:', e);
+        setDebugMessage(`Audio error: ${errorMsg}`);
         
-        // Try using a CORS proxy if the source appears to be a Spotify URL
-        if (source && source.includes('spotify.com')) {
-          setDebugMessage('Attempting to use Spotify URL through proxy...');
-          audioRef.current.src = `/api/proxy?url=${encodeURIComponent(source)}`;
+        // Try using a CORS proxy if the source appears to be an external URL
+        if (source && !attemptedProxy && 
+            (source.startsWith('http') || source.startsWith('//'))) {
+          setDebugMessage('Attempting to use URL through proxy...');
+          setAttemptedProxy(true);
+          
+          // Try the proxy endpoint
+          const proxyUrl = `/api/proxy?url=${encodeURIComponent(source)}`;
+          console.log('Trying proxy URL:', proxyUrl);
+          audioRef.current.src = proxyUrl;
           audioRef.current.load();
+          
+          // Wait a moment and try to play again
+          setTimeout(() => {
+            try {
+              audioRef.current.play()
+                .then(() => {
+                  setIsPlaying(true);
+                  setAudioError(false);
+                  setDebugMessage('Audio playing through proxy');
+                })
+                .catch(proxyErr => {
+                  console.error('Proxy playback error:', proxyErr);
+                  setDebugMessage(`Proxy error: ${proxyErr.message}`);
+                  
+                  // As a last resort, try playing a default audio file
+                  tryFallbackAudio();
+                });
+            } catch (playErr) {
+              console.error('Error playing through proxy:', playErr);
+              tryFallbackAudio();
+            }
+          }, 500);
+        } else if (!attemptedProxy) {
+          // If not an external URL or proxy already attempted, try fallback
+          tryFallbackAudio();
         }
       };
       
       // Set source and load
       console.log('Audio source type:', typeof source);
       console.log('Audio source length:', source ? source.length : 0);
+      console.log('Audio source value:', source);
       
       if (!source) {
         throw new Error('No audio source provided');
       }
       
+      // Reset proxy attempt flag when source changes
+      setAttemptedProxy(false);
+      
       // Handle potential CORS issues by checking source type
-      if (source.startsWith('https://p.scdn.co/') || source.startsWith('https://audio-ssl.itunes.apple.com/')) {
+      if (source.startsWith('https://p.scdn.co/') || 
+          source.startsWith('https://audio-ssl.itunes.apple.com/')) {
         setDebugMessage('Using external streaming URL through proxy...');
         audioRef.current.src = `/api/proxy?url=${encodeURIComponent(source)}`;
       } else {
@@ -121,6 +190,35 @@ const SimpleAudioPlayer = ({ source }) => {
       setAudioError(true);
       setDebugMessage(`Setup error: ${err.message}`);
       console.error('Audio setup error:', err);
+      
+      // Try fallback audio if setup fails
+      tryFallbackAudio();
+    }
+  };
+  
+  // Function to try playing a fallback audio as last resort
+  const tryFallbackAudio = () => {
+    try {
+      setDebugMessage('Trying fallback audio...');
+      // Embedded base64 beep sound as absolute last resort
+      const fallbackAudio = "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKK3XdujQfBuGIYhicIQeD4cHnMYIN4PggwcH8Hw4ggwfBA/BAEHAIHg+CDHiCIYfQQYPggaDgiCB/4PgQCD4Ig+CIOAQPh8QfAkHwQY8fB5w4IPggCEAwIAOgAwAAwBuBgYLgjgAIAAAAACsAAADgAA/8YAAAONiZCXjYAAAAMAAAMAADA4CAgGAAAEAAAOAB+JZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==";
+      
+      if (audioRef.current) {
+        audioRef.current.src = fallbackAudio;
+        audioRef.current.load();
+        audioRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+            setDebugMessage('Fallback audio playing');
+          })
+          .catch(err => {
+            setDebugMessage(`Fallback audio failed: ${err.message}`);
+            console.error('Fallback audio failed:', err);
+          });
+      }
+    } catch (err) {
+      setDebugMessage(`All audio attempts failed: ${err.message}`);
+      console.error('All audio attempts failed:', err);
     }
   };
 
@@ -130,6 +228,10 @@ const SimpleAudioPlayer = ({ source }) => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';
+        audioRef.current.oncanplaythrough = null;
+        audioRef.current.onended = null;
+        audioRef.current.ontimeupdate = null;
+        audioRef.current.onerror = null;
       }
     };
   }, []);
@@ -141,12 +243,7 @@ const SimpleAudioPlayer = ({ source }) => {
       setIsPlaying(false);
       setAudioError(false);
       setProgress(0);
-      
-      // If we were previously playing, try to load and play new source
-      const wasPlaying = isPlaying;
-      if (wasPlaying) {
-        playAudio();
-      }
+      setAttemptedProxy(false);
     }
   }, [source]);
 
