@@ -102,6 +102,14 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
         // Create a new audio element for this playback
         const audio = new Audio();
         
+        // Only use proxy for non-data URLs, prefer direct data URLs first
+        let audioUrl = track.previewUrl;
+        if (!audioUrl.startsWith('data:')) {
+          console.log(`Using external URL: ${audioUrl}`);
+          // Only use the proxy as a fallback, not as the primary method
+          // since we're now using embedded audio data
+        }
+        
         audio.oncanplaythrough = () => {
           setIsLoadingAudio(false);
           setPlayingId(track.spotifyId);
@@ -112,9 +120,21 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
           });
         };
         
-        audio.onerror = () => {
+        audio.onerror = (e) => {
           console.error("Audio load error");
           setIsLoadingAudio(false);
+          
+          // If error is with a non-data URL, try the proxy
+          if (!audioUrl.startsWith('data:') && !audioUrl.includes('/api/preview-proxy')) {
+            console.log("Trying proxy instead");
+            // Add a check for undefined previewUrl
+            if (track.previewUrl) {
+              audio.src = `/api/preview-proxy?url=${encodeURIComponent(track.previewUrl)}`;
+              audio.load();
+              return; // Don't show error yet, try proxy first
+            }
+          }
+          
           setErrorMessage("Audio failed to load. Opening in Spotify instead.");
           openInSpotify(track.spotifyId);
         };
@@ -124,7 +144,7 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
         };
         
         // Set source and load
-        audio.src = track.previewUrl;
+        audio.src = audioUrl;
         audio.load();
       } catch (err) {
         console.error("Audio setup error:", err);
