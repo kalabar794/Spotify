@@ -1,30 +1,51 @@
 .track-item {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   padding: 15px;
   margin-bottom: 15px;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
 }
 
 .track-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.track-item.expanded {
+  background-color: #f8f9fa;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.track-content {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .track-image {
   width: 80px;
   height: 80px;
-  border-radius: 6px;
+  border-radius: 8px;
   object-fit: cover;
   margin-right: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.track-item.expanded .track-image {
+  transform: scale(1.05);
 }
 
 .track-info {
   flex: 1;
   min-width: 0;
+  padding-right: 10px;
 }
 
 .track-name {
@@ -35,6 +56,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.track-item:hover .track-name {
+  color: #1DB954;
 }
 
 .track-artist {
@@ -60,35 +86,38 @@
   align-items: center;
   justify-content: flex-end;
   margin-left: 10px;
+  gap: 8px;
 }
 
-.play-button {
-  width: 36px;
-  height: 36px;
+.track-details {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.track-player-container {
+  width: 100%;
+}
+
+.expand-button {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #1DB954;
-  color: white;
+  background: #f0f0f0;
+  color: #666;
   border: none;
   font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 8px;
-  transition: transform 0.2s;
+  transition: all 0.2s;
 }
 
-.play-button:hover {
-  transform: scale(1.1);
-  background: #1ed760;
-}
-
-.play-button.playing {
-  background: #ff7b00;
-}
-
-.play-button.error {
-  background: #e74c3c;
+.expand-button:hover {
+  background: #e0e0e0;
+  color: #333;
 }
 
 .spotify-button {
@@ -100,11 +129,16 @@
   font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .spotify-button:hover {
-  background-color: #1aa34a;
+  background-color: #1ed760;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(29, 185, 84, 0.3);
 }
 
 /* Dark mode styles */
@@ -114,8 +148,16 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
   
+  .track-item.expanded {
+    background-color: #2a2a2a;
+  }
+  
   .track-name {
     color: #f5f5f5;
+  }
+  
+  .track-item:hover .track-name {
+    color: #1ed760;
   }
   
   .track-artist {
@@ -124,5 +166,30 @@
   
   .track-album {
     color: #999;
+  }
+  
+  .track-details {
+    border-top: 1px solid #444;
+  }
+  
+  .expand-button {
+    background: #444;
+    color: #ccc;
+  }
+  
+  .expand-button:hover {
+    background: #555;
+    color: #fff;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 } 

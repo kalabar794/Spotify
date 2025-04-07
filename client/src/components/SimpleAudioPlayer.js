@@ -19,9 +19,9 @@ const SimpleAudioPlayer = ({ source }) => {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Set properties for the test sound
+      // Set properties for the test sound - fixing frequency method
       oscillator.type = 'sine';
-      oscillator.frequency.value = 440; // A4 note
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // Fixed method to setValueAtTime
       gainNode.gain.value = 0.5;
       
       // Play the sound for 0.5 seconds
@@ -110,49 +110,86 @@ const SimpleAudioPlayer = ({ source }) => {
     };
   }, []);
 
+  // Improved styles for a more modern, attractive UI
+  const containerStyle = {
+    backgroundColor: 'rgba(25, 20, 20, 0.1)',
+    borderRadius: '8px',
+    padding: '12px',
+    marginTop: '12px',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px'
+  };
+
+  const buttonContainerStyle = {
+    display: 'flex',
+    gap: '8px'
+  };
+
   const buttonStyle = {
-    padding: '8px 16px',
-    margin: '5px',
-    borderRadius: '4px',
+    padding: '10px',
+    borderRadius: '30px',
     cursor: 'pointer',
     fontWeight: 'bold',
-    border: 'none'
+    border: 'none',
+    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   };
 
   const playButtonStyle = {
     ...buttonStyle,
-    backgroundColor: audioError ? '#e74c3c' : isPlaying ? '#3498db' : '#2ecc71',
-    color: 'white'
+    backgroundColor: audioError ? '#e74c3c' : isPlaying ? '#3498db' : '#1DB954',
+    color: 'white',
+    width: '100px',
+    fontSize: '14px',
+    transform: 'scale(1)',
+    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+    '&:hover': {
+      transform: 'scale(1.05)',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)'
+    }
   };
   
   const testButtonStyle = {
     ...buttonStyle,
     backgroundColor: '#f39c12',
-    color: 'white'
+    color: 'white',
+    fontSize: '12px',
+    padding: '8px 12px'
   };
   
   const debugStyle = {
     marginTop: '8px',
     fontSize: '12px',
-    color: audioError ? '#e74c3c' : '#7f8c8d'
+    color: audioError ? '#e74c3c' : '#7f8c8d',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    padding: '8px',
+    borderRadius: '4px',
+    maxHeight: '60px',
+    overflowY: 'auto'
   };
 
   return (
-    <div className="simple-audio-player">
-      <button
-        style={playButtonStyle}
-        onClick={playAudio}
-        disabled={!source && !audioError}
-      >
-        {isPlaying ? 'Pause' : 'Play'}
-      </button>
-      
-      <button 
-        style={testButtonStyle}
-        onClick={playTestSound}
-      >
-        Test Sound
-      </button>
+    <div style={containerStyle} className="simple-audio-player">
+      <div style={buttonContainerStyle}>
+        <button
+          style={playButtonStyle}
+          onClick={playAudio}
+          disabled={!source && !audioError}
+        >
+          {isPlaying ? '❚❚ Pause' : '▶ Play'}
+        </button>
+        
+        <button 
+          style={testButtonStyle}
+          onClick={playTestSound}
+        >
+          Test Sound
+        </button>
+      </div>
       
       {debugMessage && (
         <div style={debugStyle}>
