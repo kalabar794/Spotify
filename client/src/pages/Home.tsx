@@ -20,7 +20,6 @@ import {
 import { MusicNote, Mood, PlayArrow, OpenInNew, Search } from '@mui/icons-material';
 import { useMood } from '../context/MoodContext';
 import { AuthContext } from '../context/AuthContext';
-import TrackList from '../components/TrackList';
 import TrackItem from '../components/TrackItem';
 
 const GradientPaper = styled(Paper)(({ theme }) => ({
@@ -557,16 +556,19 @@ const Home: React.FC = () => {
                           Based on your mood: <strong>{moodText}</strong>
                         </Typography>
                         
-                        <TrackList tracks={tracks} mood={analyzedMood ? {
-                          keywords: analyzedMood.keywords,
-                          sentiment: analyzedMood.sentiment,
-                          originalText: analyzedMood.originalText,
-                          colorScheme: {
-                            primary: theme.palette.primary.main,
-                            secondary: theme.palette.secondary.main,
-                            text: theme.palette.text.primary
-                          }
-                        } : null} />
+                        <div className="track-list-container">
+                          <Typography variant="h5" component="h2" gutterBottom sx={{
+                            fontWeight: 700,
+                            fontSize: { xs: '1.5rem', md: '1.8rem' },
+                            mb: 2
+                          }}>
+                            {analyzedMood ? `${analyzedMood.originalText ? analyzedMood.originalText.charAt(0).toUpperCase() + analyzedMood.originalText.slice(1) : 'Your'} Tracks` : 'Your Recommended Tracks'}
+                          </Typography>
+                          
+                          {tracks.map(track => (
+                            <TrackItem key={track.spotifyId} track={track} />
+                          ))}
+                        </div>
                         
                         <Box sx={{ mt: 4, textAlign: 'center' }}>
                           <Typography variant="subtitle2" gutterBottom>
