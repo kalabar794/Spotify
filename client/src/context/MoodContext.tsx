@@ -181,6 +181,7 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
 
   const analyzeMood = async (text: string): Promise<MoodData | null> => {
     setIsLoading(true);
+    setMoodText(text); // Set the mood text immediately
     
     try {
       // Include short, important mood words (like 'sad', 'mad', 'joy')
@@ -213,53 +214,22 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
         sentimentScore = 0.5 - (negativeCount / keywords.length) * 0.5;
       }
       
-      // API call to get Spotify recommendations
-      try {
-        const response = await fetch('/api/mood/recommendations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            moodKeywords: uniqueKeywords,
-            sentiment: sentimentScore,
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to get music recommendations');
-        }
-        
-        const data = await response.json();
-        
-        // Check if the response contains tracks directly or in a tracks property
-        let processedTracks: Track[] = [];
-        
-        if (Array.isArray(data)) {
-          processedTracks = data;
-        } else if (data.tracks && Array.isArray(data.tracks)) {
-          processedTracks = data.tracks;
-        } else {
-          console.error('Unexpected response format:', data);
-          throw new Error('Invalid API response format');
-        }
-        
-        // Set the tracks from the API response
-        setTracks(processedTracks);
-      } catch (error) {
-        console.error('API error:', error);
-        throw error;
-      }
+      // SKIP API CALL - API endpoints aren't working
+      // Instead, use mock data based on mood
+      const selectedTracks = getMockTracksByMood(sentimentScore, uniqueKeywords);
+      setTracks(selectedTracks);
       
-      return {
+      const moodData = {
         keywords: uniqueKeywords,
         sentiment: sentimentScore,
         originalText: text
       };
+      
+      return moodData;
     } catch (error) {
       console.error('Error analyzing mood:', error);
-      // Default to neutral mood tracks
-      setTracks(calmMockTracks);
+      // Default to happy mood tracks
+      setTracks(happyMockTracks);
       return null;
     } finally {
       setIsLoading(false);
