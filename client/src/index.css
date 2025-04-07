@@ -48,4 +48,106 @@ main {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Add styles for the Home component */
+.home-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+}
+
+.home-container h1 {
+  font-size: 2.5rem;
+  color: #6200ea;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.home-container p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.mood-form {
+  margin-bottom: 30px;
+}
+
+.mood-input {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  resize: vertical;
+}
+
+.submit-button {
+  background-color: #6200ea;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: block;
+  margin: 0 auto;
+}
+
+.submit-button:hover {
+  background-color: #5000d2;
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.results-container {
+  margin-top: 30px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.results-container h2 {
+  font-size: 1.8rem;
+  color: #6200ea;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.mood-description {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #444;
+}
+
+.tracks-container {
+  margin-top: 20px;
+}
+
+/* Simple audio player styles */
+.simple-audio-player {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Add basic responsive styles */
+@media (max-width: 600px) {
+  .home-container h1 {
+    font-size: 2rem;
+  }
+  
+  .submit-button {
+    width: 100%;
+  }
 } 
