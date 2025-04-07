@@ -13,7 +13,8 @@ import {
   Tooltip,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Button
 } from '@mui/material';
 import { PlayArrow, Pause, ExpandMore, ExpandLess, PlaylistAdd, OpenInNew } from '@mui/icons-material';
 import AudioPlayer from './AudioPlayer';
@@ -50,7 +51,110 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   
+  // Initialize audio context on component mount
+  useEffect(() => {
+    // Create AudioContext but don't start it yet
+    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+    setAudioContext(context);
+    
+    return () => {
+      // Clean up on unmount
+      if (context && context.state !== 'closed') {
+        context.close();
+      }
+    };
+  }, []);
+  
+  // Function to resume audio context (must be called from a user action)
+  const resumeAudioContext = () => {
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume().then(() => {
+        console.log('AudioContext successfully resumed');
+      }).catch(err => {
+        console.error('Failed to resume AudioContext:', err);
+      });
+    }
+  };
+  
+  // Create a new audio element for each playback
+  const handlePlay = (track: Track) => {
+    // Ensure audio context is resumed (must happen from user interaction)
+    resumeAudioContext();
+    
+    // If already playing this track, stop it
+    if (playingId === track.spotifyId) {
+      // Find and stop any playing audio elements
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        audio.pause();
+      });
+      setPlayingId(null);
+      return;
+    }
+    
+    // If track has preview URL
+    if (track.previewUrl) {
+      try {
+        setIsLoadingAudio(true);
+        
+        // Create a new audio element for this playback
+        const audio = new Audio();
+        
+        audio.oncanplaythrough = () => {
+          setIsLoadingAudio(false);
+          setPlayingId(track.spotifyId);
+          audio.play().catch(err => {
+            console.error("Play error:", err);
+            setErrorMessage("Browser couldn't play the audio. Try opening in Spotify.");
+            setPlayingId(null);
+          });
+        };
+        
+        audio.onerror = () => {
+          console.error("Audio load error");
+          setIsLoadingAudio(false);
+          setErrorMessage("Audio failed to load. Opening in Spotify instead.");
+          openInSpotify(track.spotifyId);
+        };
+        
+        audio.onended = () => {
+          setPlayingId(null);
+        };
+        
+        // Set source and load
+        audio.src = track.previewUrl;
+        audio.load();
+      } catch (err) {
+        console.error("Audio setup error:", err);
+        setIsLoadingAudio(false);
+        openInSpotify(track.spotifyId);
+      }
+    } else {
+      // No preview URL, open directly in Spotify
+      openInSpotify(track.spotifyId);
+    }
+  };
+  
+  // Add a test sound function
+  const testAudio = () => {
+    resumeAudioContext();
+    const testSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAFwAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr///////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAX/////////////////////////////////+M4wDv/i5rCEQcAANBuKK3XdujQfBuGIYhicIQeD4cHnMYIN4PggwcH8Hw4ggwfBA/BAEHAIHg+CDHiCIYfQQYPggaDgiCB/4PgQCD4Ig+CIOAQPh8QfAkHwQY8fB5w4IPggCEAwIAOgAwAAwBuBgYLgjgAIAAAAACsAAADgAA/8YAAAONiZCXjYAAAAMAAAMAADA4CAgGAAAEAAAOAB+JZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAE5pbXBvcnRlZCBmcm9tIGlDb3JlLg==");
+    
+    testSound.oncanplaythrough = () => {
+      testSound.play().catch(e => {
+        console.error("Test sound failed:", e);
+        setErrorMessage("Test sound couldn't play. Check your browser permissions.");
+      });
+    };
+    
+    testSound.onerror = () => {
+      console.error("Test sound load error");
+      setErrorMessage("Test sound failed to load.");
+    };
+  };
+
   const openInSpotify = (spotifyId: string) => {
     const trackId = spotifyId.startsWith('spotify:track:') 
       ? spotifyId.split(':')[2] 
@@ -67,7 +171,34 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
   const displayedTracks = expanded ? tracks : tracks.slice(0, 5);
 
   return (
-    <>
+    <Box sx={{ width: '100%', mt: 3 }}>
+      {/* Track list header with mood title */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mb: 2 
+      }}>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ 
+          fontWeight: 700,
+          fontSize: { xs: '1.5rem', md: '1.8rem' },
+          mb: 0
+        }}>
+          {mood ? `${mood.originalText ? mood.originalText.charAt(0).toUpperCase() + mood.originalText.slice(1) : 'Your'} Tracks` : 'Your Recommended Tracks'}
+        </Typography>
+        
+        {/* Add test sound button */}
+        <Button 
+          variant="contained" 
+          color="secondary" 
+          onClick={testAudio}
+          size="small"
+          sx={{ borderRadius: 50 }}
+        >
+          Test Audio
+        </Button>
+      </Box>
+      
       <Paper elevation={3} sx={{ borderRadius: 2 }}>
         <List sx={{ width: '100%', p: 0 }}>
           {displayedTracks.map((track) => (
@@ -169,7 +300,7 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
           {errorMessage}
         </Alert>
       </Snackbar>
-    </>
+    </Box>
   );
 };
 
