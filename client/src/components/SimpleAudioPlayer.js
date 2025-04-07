@@ -173,12 +173,17 @@ const SimpleAudioPlayer = ({ source }) => {
   };
 
   return (
-    <div style={containerStyle} className="simple-audio-player">
+    <div 
+      style={containerStyle} 
+      className="simple-audio-player"
+      data-testid="audio-player"
+    >
       <div style={buttonContainerStyle}>
         <button
           style={playButtonStyle}
           onClick={playAudio}
           disabled={!source && !audioError}
+          data-testid="play-button"
         >
           {isPlaying ? '❚❚ Pause' : '▶ Play'}
         </button>
@@ -186,13 +191,17 @@ const SimpleAudioPlayer = ({ source }) => {
         <button 
           style={testButtonStyle}
           onClick={playTestSound}
+          data-testid="test-sound-button"
         >
           Test Sound
         </button>
       </div>
       
       {debugMessage && (
-        <div style={debugStyle}>
+        <div 
+          style={debugStyle}
+          data-testid="debug-message"
+        >
           {debugMessage}
         </div>
       )}

@@ -20,23 +20,28 @@ const TrackItem = ({ track }) => {
   };
 
   return (
-    <div className={`track-item ${expanded ? 'expanded' : ''}`} onClick={toggleExpand}>
+    <div 
+      className={`track-item ${expanded ? 'expanded' : ''}`} 
+      onClick={toggleExpand}
+      data-testid="track-item"
+    >
       <div className="track-content">
         <img 
           src={track.albumArt || 'https://via.placeholder.com/80'} 
           alt={track.name} 
           className="track-image"
+          data-testid="track-image"
           onError={(e) => {
             e.target.src = 'https://via.placeholder.com/80';
           }}
         />
         <div className="track-info">
-          <div className="track-name">{track.name}</div>
-          <div className="track-artist">{track.artist}</div>
-          <div className="track-album">{track.album}</div>
+          <div className="track-name" data-testid="track-name">{track.name}</div>
+          <div className="track-artist" data-testid="track-artist">{track.artist}</div>
+          <div className="track-album" data-testid="track-album">{track.album}</div>
           
           {expanded && (
-            <div className="track-details">
+            <div className="track-details" data-testid="track-details">
               <div className="track-player-container">
                 {/* Use the simplified player component */}
                 <SimpleAudioPlayer source={track.previewUrl} />
@@ -49,6 +54,7 @@ const TrackItem = ({ track }) => {
             className="expand-button" 
             onClick={toggleExpand}
             title={expanded ? "Hide details" : "Show details"}
+            data-testid="expand-button"
           >
             {expanded ? '▲' : '▼'}
           </button>
@@ -56,6 +62,7 @@ const TrackItem = ({ track }) => {
             className="spotify-button" 
             onClick={openInSpotify}
             title="Open in Spotify"
+            data-testid="spotify-button"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" style={{ marginRight: '4px' }}>
               <path fill="currentColor" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.5 17.3c-.2.3-.6.4-1 .2-2.8-1.7-6.3-2.1-10.5-1.1-.4.1-.8-.2-.9-.6-.1-.4.2-.8.6-.9 4.5-1 8.4-.6 11.6 1.4.4.2.5.7.2 1zm1.5-3.3c-.3.4-.8.5-1.2.3-3.2-2-8.1-2.6-11.9-1.4-.5.1-1-.1-1.2-.6-.1-.5.1-1 .6-1.2 4.3-1.3 9.7-.7 13.3 1.7.5.2.6.7.4 1.2zm.1-3.4c-3.8-2.3-10.1-2.5-13.8-1.4-.6.1-1.2-.2-1.3-.8-.1-.6.2-1.2.8-1.3 4.2-1.3 11.1-1 15.5 1.6.5.3.7 1 .4 1.5-.3.5-.9.7-1.6.4z"/>
