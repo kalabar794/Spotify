@@ -206,7 +206,9 @@ const TrackList: React.FC<TrackListProps> = ({ tracks, mood }) => {
               key={track.spotifyId}
               secondaryAction={
                 <Box>
-                  <AudioPlayer previewUrl={track.previewUrl} />
+                  <Box onClick={resumeAudioContext} sx={{ display: 'inline-block' }}>
+                    <AudioPlayer previewUrl={track.previewUrl} />
+                  </Box>
                   <Tooltip title="Open in Spotify">
                     <IconButton 
                       edge="end" 

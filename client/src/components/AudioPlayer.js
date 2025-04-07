@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './AudioPlayer.css';
 
 const AudioPlayer = ({ previewUrl }) => {
@@ -8,30 +8,52 @@ const AudioPlayer = ({ previewUrl }) => {
   const [debugInfo, setDebugInfo] = useState('');
   const [showControls, setShowControls] = useState(false); // Flag to toggle visible audio controls
   const [audioLogging, setAudioLogging] = useState([]); // Log audio operations
+  const audioContextRef = useRef(null);
   
-  // Initialize directly with an Audio element to ensure browser is ready
+  // Initialize the audio context on component mount
   useEffect(() => {
-    const audioInit = new Audio();
-    audioInit.volume = 0.5; // Set to half volume for safety
-    
-    // Log browser audio capabilities
-    const audioContextTest = 'AudioContext' in window || 'webkitAudioContext' in window;
-    setDebugInfo(`Browser audio support: ${audioContextTest ? 'Yes' : 'No'}`);
-    
-    // Monitor audio context state
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      setAudioLogging(prev => [...prev, `Audio context state: ${ctx.state}`]);
-    } catch (e) {
-      setAudioLogging(prev => [...prev, `Audio context error: ${e.message}`]);
+    // Create or get existing Audio Context
+    if (!audioContextRef.current) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContextRef.current = new AudioContext();
+        setAudioLogging(prev => [...prev, `Audio context state: ${audioContextRef.current.state}`]);
+      } catch (e) {
+        setAudioLogging(prev => [...prev, `Audio context error: ${e.message}`]);
+      }
     }
+    
+    return () => {
+      // Clean up audio on unmount
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.src = '';
+      }
+    };
   }, []);
+  
+  // Function to ensure audio context is running
+  const ensureAudioContext = () => {
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume().then(() => {
+        setAudioLogging(prev => [...prev, `Audio context resumed: ${audioContextRef.current.state}`]);
+      }).catch(err => {
+        setAudioLogging(prev => [...prev, `Audio context resume error: ${err.message}`]);
+      });
+    }
+  };
   
   // Create a very simple beep sound directly with Web Audio API
   const createBeepSound = () => {
+    ensureAudioContext();
+    
     try {
       setAudioLogging(prev => [...prev, 'Creating beep sound...']);
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const audioCtx = audioContextRef.current;
+      
+      if (!audioCtx) {
+        throw new Error('Audio context not available');
+      }
       
       // Log the state of the audio context
       setAudioLogging(prev => [...prev, `Audio context state: ${audioCtx.state}`]);
@@ -72,6 +94,8 @@ const AudioPlayer = ({ previewUrl }) => {
   
   // Create a test function to play a simple test sound
   const playTestSound = () => {
+    ensureAudioContext();
+    
     // Stop any existing playback
     if (audioElement) {
       audioElement.pause();
@@ -81,25 +105,6 @@ const AudioPlayer = ({ previewUrl }) => {
     // Try direct Web Audio API first
     if (createBeepSound()) {
       return;
-    }
-    
-    // Create a simple test sound using the Web Audio API
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
-      oscillator.connect(audioCtx.destination);
-      oscillator.start();
-      
-      // Let it play for 1 second
-      setTimeout(() => {
-        oscillator.stop();
-        setDebugInfo('Test sound played successfully - your audio system works');
-      }, 1000);
-    } catch (e) {
-      setDebugInfo('Test sound failed: ' + e.message);
-      console.error('Test sound error:', e);
     }
   };
   
@@ -116,6 +121,9 @@ const AudioPlayer = ({ previewUrl }) => {
   
   // Play the actual audio file/data
   const playAudio = () => {
+    // Make sure audio context is running first
+    ensureAudioContext();
+    
     if (!previewUrl) {
       setDebugInfo('No preview URL provided');
       setAudioLogging(prev => [...prev, 'No preview URL available']);
@@ -135,13 +143,6 @@ const AudioPlayer = ({ previewUrl }) => {
     setError(false);
     setDebugInfo('Attempting to play...');
     
-    // Display URL for debugging
-    if (previewUrl.startsWith('data:')) {
-      setAudioLogging(prev => [...prev, `URL type: data URL (base64), length: ${previewUrl.length}`]);
-    } else {
-      setAudioLogging(prev => [...prev, `URL: ${previewUrl}`]);
-    }
-    
     // Special handler for data URLs (base64 audio)
     if (previewUrl.startsWith('data:audio')) {
       setDebugInfo('Detected base64 encoded audio - trying simple Audio element');
@@ -149,7 +150,7 @@ const AudioPlayer = ({ previewUrl }) => {
       
       try {
         // Create a bare Audio element
-        const audio = new Audio(previewUrl);
+        const audio = new Audio();
         
         // Add event listeners
         audio.oncanplaythrough = () => {
@@ -171,25 +172,44 @@ const AudioPlayer = ({ previewUrl }) => {
           setAudioLogging(prev => [...prev, `Base64 audio error: ${audio.error ? audio.error.code : 'unknown'}`]);
         };
         
-        // Start playing
+        // Set source and load
+        audio.src = previewUrl;
         audio.volume = 0.5; // Set to half volume for safety
-        const playPromise = audio.play();
         
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              setIsPlaying(true);
-              setAudioElement(audio);
-              setDebugInfo('Base64 audio playing');
-            })
-            .catch(err => {
-              setError(true);
-              setDebugInfo(`Base64 playback error: ${err.message}`);
-              setAudioLogging(prev => [...prev, `Base64 playback error: ${err.name} - ${err.message}`]);
-              
-              // Try Web Audio API as fallback for base64
-              tryWebAudioForBase64(previewUrl);
-            });
+        // Start playing - but first make sure audio context is active
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+          audioContextRef.current.resume().then(() => {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  setIsPlaying(true);
+                  setAudioElement(audio);
+                  setDebugInfo('Base64 audio playing');
+                })
+                .catch(err => {
+                  setError(true);
+                  setDebugInfo(`Playback error: ${err.message}`);
+                  setAudioLogging(prev => [...prev, `Playback error: ${err.name} - ${err.message}`]);
+                });
+            }
+          });
+        } else {
+          // Context already running or not available, try playing directly
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                setIsPlaying(true);
+                setAudioElement(audio);
+                setDebugInfo('Base64 audio playing');
+              })
+              .catch(err => {
+                setError(true);
+                setDebugInfo(`Playback error: ${err.message}`);
+                setAudioLogging(prev => [...prev, `Playback error: ${err.name} - ${err.message}`]);
+              });
+          }
         }
       } catch (e) {
         setError(true);
@@ -277,78 +297,6 @@ const AudioPlayer = ({ previewUrl }) => {
       setError(true);
       setDebugInfo(`General error: ${e.message}`);
       setAudioLogging(prev => [...prev, `General exception: ${e.message}`]);
-    }
-  };
-  
-  // Try to play base64 audio using Web Audio API
-  const tryWebAudioForBase64 = (dataUrl) => {
-    try {
-      setAudioLogging(prev => [...prev, 'Trying Web Audio API for base64...']);
-      
-      // Extract the base64 data
-      const base64Data = dataUrl.split(',')[1];
-      if (!base64Data) {
-        throw new Error('Invalid data URL format');
-      }
-      
-      // Convert base64 to binary
-      const binaryString = atob(base64Data);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
-      // Create audio context
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Decode the audio data
-      audioCtx.decodeAudioData(
-        bytes.buffer,
-        (buffer) => {
-          setAudioLogging(prev => [...prev, 'Base64 audio decoded successfully']);
-          
-          // Create source node
-          const source = audioCtx.createBufferSource();
-          source.buffer = buffer;
-          source.connect(audioCtx.destination);
-          
-          // Play the audio
-          source.start(0);
-          setIsPlaying(true);
-          setDebugInfo('Playing with Web Audio API');
-          
-          // Setup cleanup
-          source.onended = () => {
-            setIsPlaying(false);
-            setAudioLogging(prev => [...prev, 'Web Audio API playback ended']);
-          };
-          
-          // Create a virtual audio element for pause functionality
-          setAudioElement({
-            pause: () => {
-              source.stop();
-              setIsPlaying(false);
-            }
-          });
-        },
-        (err) => {
-          setError(true);
-          setDebugInfo(`Failed to decode audio: ${err.message}`);
-          setAudioLogging(prev => [...prev, `Web Audio decode error: ${err.message}`]);
-          
-          // Create a simple test sound as a last resort
-          createBeepSound();
-        }
-      );
-    } catch (e) {
-      setError(true);
-      setDebugInfo(`Web Audio API error: ${e.message}`);
-      setAudioLogging(prev => [...prev, `Web Audio exception: ${e.message}`]);
-      
-      // Create a simple test sound as a last resort
-      createBeepSound();
     }
   };
   
