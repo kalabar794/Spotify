@@ -184,53 +184,89 @@ export const MoodProvider: React.FC<MoodProviderProps> = ({ children }) => {
     setMoodText(text); // Set the mood text immediately
     
     try {
-      // Include short, important mood words (like 'sad', 'mad', 'joy')
-      const importantMoodWords = ['sad', 'mad', 'joy', 'bad', 'good'];
-      const allWords = text.toLowerCase().split(/\W+/);
+      // Use the server API to analyze mood and get real Spotify recommendations
+      const response = await fetch('/api/analyze-mood', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
       
-      // Filter to include both longer words and important mood words
-      const keywords = allWords.filter(word => 
-        word.length > 3 || importantMoodWords.includes(word)
-      );
-      
-      const uniqueKeywords = Array.from(new Set(keywords)).slice(0, 5);
-      
-      // Perform a basic sentiment analysis
-      // Positive keywords
-      const positiveWords = ['happy', 'joy', 'excited', 'good', 'great', 'amazing', 'love', 'wonderful'];
-      // Negative keywords
-      const negativeWords = ['sad', 'unhappy', 'depressed', 'bad', 'terrible', 'awful', 'hate', 'angry'];
-      
-      let sentimentScore = 0.5; // Neutral default
-      
-      // Count positive and negative words
-      const positiveCount = keywords.filter(word => positiveWords.includes(word)).length;
-      const negativeCount = keywords.filter(word => negativeWords.includes(word)).length;
-      
-      // Calculate sentiment
-      if (positiveCount > negativeCount) {
-        sentimentScore = 0.5 + (positiveCount / keywords.length) * 0.5;
-      } else if (negativeCount > positiveCount) {
-        sentimentScore = 0.5 - (negativeCount / keywords.length) * 0.5;
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
       }
       
-      // SKIP API CALL - API endpoints aren't working
-      // Instead, use mock data based on mood
-      const selectedTracks = getMockTracksByMood(sentimentScore, uniqueKeywords);
-      setTracks(selectedTracks);
+      const data = await response.json();
+      console.log('Received data from server:', data);
       
-      const moodData = {
-        keywords: uniqueKeywords,
-        sentiment: sentimentScore,
-        originalText: text
-      };
-      
-      return moodData;
+      // If we have tracks from the API, use them
+      if (data && data.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
+        setTracks(data.tracks);
+        
+        return {
+          keywords: data.mood.keywords || [],
+          sentiment: data.mood.sentiment || 0.5,
+          originalText: text
+        };
+      } else {
+        // Fallback to basic client-side mood analysis if API doesn't return tracks
+        console.warn('API returned no tracks, falling back to client-side analysis');
+        
+        // Include short, important mood words (like 'sad', 'mad', 'joy')
+        const importantMoodWords = ['sad', 'mad', 'joy', 'bad', 'good'];
+        const allWords = text.toLowerCase().split(/\W+/);
+        
+        // Filter to include both longer words and important mood words
+        const keywords = allWords.filter(word => 
+          word.length > 3 || importantMoodWords.includes(word)
+        );
+        
+        const uniqueKeywords = Array.from(new Set(keywords)).slice(0, 5);
+        
+        // Perform a basic sentiment analysis
+        // Positive keywords
+        const positiveWords = ['happy', 'joy', 'excited', 'good', 'great', 'amazing', 'love', 'wonderful'];
+        // Negative keywords
+        const negativeWords = ['sad', 'unhappy', 'depressed', 'bad', 'terrible', 'awful', 'hate', 'angry'];
+        
+        let sentimentScore = 0.5; // Neutral default
+        
+        // Count positive and negative words
+        const positiveCount = keywords.filter(word => positiveWords.includes(word)).length;
+        const negativeCount = keywords.filter(word => negativeWords.includes(word)).length;
+        
+        // Calculate sentiment
+        if (positiveCount > negativeCount) {
+          sentimentScore = 0.5 + (positiveCount / keywords.length) * 0.5;
+        } else if (negativeCount > positiveCount) {
+          sentimentScore = 0.5 - (negativeCount / keywords.length) * 0.5;
+        }
+        
+        // Use mock data as a last resort
+        const selectedTracks = getMockTracksByMood(sentimentScore, uniqueKeywords);
+        setTracks(selectedTracks);
+        
+        const moodData = {
+          keywords: uniqueKeywords,
+          sentiment: sentimentScore,
+          originalText: text
+        };
+        
+        return moodData;
+      }
     } catch (error) {
       console.error('Error analyzing mood:', error);
-      // Default to happy mood tracks
+      
+      // Fallback to happy mood tracks in case of error
+      console.warn('Error occurred, falling back to default happy tracks');
       setTracks(happyMockTracks);
-      return null;
+      
+      return {
+        keywords: ['error', 'fallback'],
+        sentiment: 0.5,
+        originalText: text
+      };
     } finally {
       setIsLoading(false);
     }

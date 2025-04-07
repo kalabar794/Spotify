@@ -5,6 +5,8 @@ const SimpleAudioPlayer = ({ source }) => {
   const [audioError, setAudioError] = useState(false);
   const [debugMessage, setDebugMessage] = useState('');
   const audioRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   // Function to generate a test beep sound for debugging
   const playTestSound = () => {
@@ -62,6 +64,7 @@ const SimpleAudioPlayer = ({ source }) => {
           .then(() => {
             setIsPlaying(true);
             setDebugMessage('Audio playing');
+            setDuration(audioRef.current.duration);
           })
           .catch(err => {
             setAudioError(true);
@@ -73,6 +76,13 @@ const SimpleAudioPlayer = ({ source }) => {
       audioRef.current.onended = () => {
         setIsPlaying(false);
         setDebugMessage('Audio playback ended');
+        setProgress(0);
+      };
+      
+      audioRef.current.ontimeupdate = () => {
+        if (audioRef.current) {
+          setProgress(audioRef.current.currentTime);
+        }
       };
       
       audioRef.current.onerror = (e) => {
@@ -80,6 +90,13 @@ const SimpleAudioPlayer = ({ source }) => {
         setIsPlaying(false);
         setDebugMessage(`Audio error: ${e.target.error ? e.target.error.message : 'Unknown error'}`);
         console.error('Audio error:', e);
+        
+        // Try using a CORS proxy if the source appears to be a Spotify URL
+        if (source && source.includes('spotify.com')) {
+          setDebugMessage('Attempting to use Spotify URL through proxy...');
+          audioRef.current.src = `/api/proxy?url=${encodeURIComponent(source)}`;
+          audioRef.current.load();
+        }
       };
       
       // Set source and load
@@ -90,7 +107,14 @@ const SimpleAudioPlayer = ({ source }) => {
         throw new Error('No audio source provided');
       }
       
-      audioRef.current.src = source;
+      // Handle potential CORS issues by checking source type
+      if (source.startsWith('https://p.scdn.co/') || source.startsWith('https://audio-ssl.itunes.apple.com/')) {
+        setDebugMessage('Using external streaming URL through proxy...');
+        audioRef.current.src = `/api/proxy?url=${encodeURIComponent(source)}`;
+      } else {
+        audioRef.current.src = source;
+      }
+      
       audioRef.current.load();
       setDebugMessage('Audio source set and loading');
     } catch (err) {
@@ -109,6 +133,29 @@ const SimpleAudioPlayer = ({ source }) => {
       }
     };
   }, []);
+
+  // Update audio source if it changes
+  useEffect(() => {
+    if (audioRef.current && source) {
+      // Reset state for new source
+      setIsPlaying(false);
+      setAudioError(false);
+      setProgress(0);
+      
+      // If we were previously playing, try to load and play new source
+      const wasPlaying = isPlaying;
+      if (wasPlaying) {
+        playAudio();
+      }
+    }
+  }, [source]);
+
+  // Format time in MM:SS
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   // Improved styles for a more modern, attractive UI
   const containerStyle = {
@@ -146,11 +193,7 @@ const SimpleAudioPlayer = ({ source }) => {
     width: '100px',
     fontSize: '14px',
     transform: 'scale(1)',
-    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
-    '&:hover': {
-      transform: 'scale(1.05)',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)'
-    }
+    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)'
   };
   
   const testButtonStyle = {
@@ -170,6 +213,31 @@ const SimpleAudioPlayer = ({ source }) => {
     borderRadius: '4px',
     maxHeight: '60px',
     overflowY: 'auto'
+  };
+
+  const progressBarContainerStyle = {
+    width: '100%',
+    height: '8px',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    marginTop: '8px'
+  };
+
+  const progressBarStyle = {
+    height: '100%',
+    width: `${duration ? (progress / duration) * 100 : 0}%`,
+    backgroundColor: isPlaying ? '#1DB954' : '#3498db',
+    borderRadius: '4px',
+    transition: 'width 0.2s linear'
+  };
+
+  const timeDisplayStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '12px',
+    color: '#7f8c8d',
+    marginTop: '4px'
   };
 
   return (
@@ -195,6 +263,17 @@ const SimpleAudioPlayer = ({ source }) => {
         >
           Test Sound
         </button>
+      </div>
+      
+      {/* Progress bar */}
+      <div style={progressBarContainerStyle}>
+        <div style={progressBarStyle}></div>
+      </div>
+      
+      {/* Time display */}
+      <div style={timeDisplayStyle}>
+        <span>{formatTime(progress)}</span>
+        <span>{formatTime(duration)}</span>
       </div>
       
       {debugMessage && (

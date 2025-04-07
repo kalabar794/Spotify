@@ -1042,21 +1042,22 @@ app.get('/api/preview-proxy', async (req, res) => {
   }
 });
 
-// General CORS proxy for any URL
-app.get('/api/cors-proxy', async (req, res) => {
+// Audio proxy endpoint for CORS issues with Spotify/external sources
+app.get('/api/proxy', async (req, res) => {
   try {
-    const { url } = req.query;
+    const url = req.query.url;
     
     if (!url) {
       return res.status(400).json({ error: 'URL parameter is required' });
     }
     
-    console.log('Proxying request to:', url);
+    console.log('Proxying audio request to:', url);
     
-    // Make request to Spotify
+    // Make request to external audio source
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Origin': 'https://moodmix.app'
       }
     });
     
@@ -1070,6 +1071,10 @@ app.get('/api/cors-proxy', async (req, res) => {
     if (contentType) {
       res.set('Content-Type', contentType);
     }
+    
+    // Set CORS headers
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
     
     // Stream the response data
     response.body.pipe(res);
